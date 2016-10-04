@@ -1,5 +1,5 @@
 # set source files
-set (sources simplesum.c fastincommsum.c pile.c rotatesum.c utility.c dipolartensor.c mat3.c vec3.c)
+set (sources simplesum.c fastincommsum.c pile.c rotatesum.c dipolartensor.c mat3.c vec3.c)
 set (devel-headers simplesum.h fastincommsum.h rotatesum.h dipolartensor.h config.h)
 
 
