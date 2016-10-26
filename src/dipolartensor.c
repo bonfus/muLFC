@@ -1,3 +1,12 @@
+/**
+ * @file dipolartensor.c
+ * @author Pietro Bonfa
+ * @date 9 Sep 2016
+ * @brief Dipolar tensor calculator.
+ *     Here typically goes a more extensive explanation of what the header
+ * 
+ */
+
 #define _USE_MATH_DEFINES
 #include <stdio.h>
 #include <math.h>
@@ -7,12 +16,32 @@
 #include <omp.h>
 #endif 
 
-//Dipolar Tensor
-//
-// This function constructs the dipolar tensor with the positions given in in_positions
+
+/**
+ * This function calculates dipolar tensors in fractional coordinates.
+ * 
+ * @param in_positions positions of the magnetic atoms in fractional 
+ *         coordinates. Each position is specified by the three
+ *         coordinates and the 1D array must be 3*size long.
+ * @param in_muonpos position of the muon in fractional coordinates
+ * @param in_supercell extension of the supercell along the lattice vectors.
+ * @param in_cell lattice cell. The three lattice vectors should be entered 
+ *         with the following order: a_x, a_y, a_z, b_z, b_y, b_z, c_x, c_y, c_z.
+ * @param in_radius Lorentz sphere radius
+ * @param in_natoms: number of atoms in the lattice.
+ * @param out_field the dipolar tensor as 1D array with 9 entries: 
+ *          T_11, T_12, T_13, T_21, T_22, T_23, T_31, T_32, T_33
+ *          \f{equation}{ T= 
+ *               \begin{matrix}
+ *               1 & 2 & 3 \\
+ *               4 & 5 & 6 \\
+ *               7 & 8 & 9
+ *               \end{matrix}
+ *           \f}
+ */
 void DipolarTensor(const double *in_positions, 
           const double *in_muonpos, const int * in_supercell, const double *in_cell, 
-          const double radius, unsigned int size,
+          const double in_radius, unsigned int in_natoms,
           double *out_field) 
 {
 
@@ -22,19 +51,14 @@ void DipolarTensor(const double *in_positions,
     struct vec3 atmpos;
     struct vec3 muonpos;
     struct vec3 r;
-//    struct vec3 m;   //magnetic moment of atom
-//    struct vec3 u;   // unit vector
+
         
     struct mat3 sc_lat;
     
     double n;
-//    double c,s; //cosine and sine of K.R
     double onebrcube; // 1/r^3
     double onebrfive; // 1/r^5
     
-//    struct vec3 sk  ;
-//    struct vec3 isk ;
-//    double  phi ;
     
     struct mat3 A, D;
 #ifdef _OPENMP
@@ -57,7 +81,7 @@ void DipolarTensor(const double *in_positions,
 
 #ifdef _DEBUG    
     printf("I use: %i %i %i\n",scx, scy, scz);    
-    printf("Size is: %i\n",size);
+    printf("Size is: %i\n",in_natoms);
 #endif 
     
     sc_lat.a.x = in_cell[0];
@@ -99,7 +123,7 @@ void DipolarTensor(const double *in_positions,
 
 
 #ifdef _DEBUG
-    for (atom = 0; atom < size; ++atom)
+    for (atom = 0; atom < in_natoms; ++atom)
     {
                     
         // atom position in reduced coordinates
@@ -131,7 +155,7 @@ D = mat3_zero();
             for (k = 0; k < scz; ++k)
             {
                 // loop over atoms
-                for (atom = 0; atom < size; ++atom)
+                for (atom = 0; atom < in_natoms; ++atom)
                 {
                     
                     // atom position in reduced coordinates
@@ -150,7 +174,7 @@ D = mat3_zero();
                     r = vec3_sub(atmpos,muonpos);
                     
                     n = vec3_norm(r);
-                    if (n < radius)
+                    if (n < in_radius)
                     {
 
 

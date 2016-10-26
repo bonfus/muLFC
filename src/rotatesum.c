@@ -1,3 +1,12 @@
+/**
+ * @file rotatesum.c
+ * @author Pietro Bonfa
+ * @date 9 Sep 2016
+ * @brief Dipolar field calculator
+ *     
+ */
+
+
 #define _USE_MATH_DEFINES
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,11 +20,43 @@
 #endif
 
 
+/**
+ * This function calculates the dipolar field for a set of rotations of the
+ * local moments around a specified axis.
+ * 
+ * @param in_positions positions of the magnetic atoms in fractional 
+ *         coordinates. Each position is specified by the three
+ *         coordinates and the 1D array must be 3*in_natoms long.
+ * @param in_fc Fourier components. For each atom in in_positions 6 numbers must be specified.
+ *              The standard input is Re(FC_x) Im(FC_x) Re(FC_y) Im(FC_y) Re(FC_z) Im(FC_z)
+ *              (the input format can be changed by defining the 
+ *              _ALTERNATE_FC_INPUT at compile time, but this is highly discouraged.)
+ *              These values must be provided in the Cartesian coordinate system
+ *              defined by in_cell.
+ * @param in_K the propagation vector in reciprocal lattice units.
+ * @param in_phi the phase for each of the atoms given in in_positions.
+ * @param in_muonpos position of the muon in fractional coordinates
+ * @param in_supercell extension of the supercell along the lattice vectors.
+ * @param in_cell lattice cell. The three lattice vectors should be entered 
+ *         with the following order: a_x, a_y, a_z, b_z, b_y, b_z, c_x, c_y, c_z.
+ * @param radius Lorentz sphere radius
+ * @param nnn_for_cont number of nearest neighboring atoms to be included
+ *                      for the evaluation of the contact field.
+ * @param cont_radius only atoms within this radius are eligible to contribute to
+ *                      the contact field. This option is redundant but speeds
+ *                      up the evaluation significantly
+ * @param in_natoms: number of atoms in the lattice.
+ * @param in_axis: axis for the rotation
+ * @param in_nangles: the code will perform in_nangles rotations of 360 deg/in_nangles
+ * @param out_field_cont Contact filed in Cartesian coordinates defined by in_cell. A coupling of 1 \f$ \mathrm{Ang} ^{-1} \sim 13.912~\mathrm{mol/emu} \f$ is assumed.
+ * @param out_field_dip  Dipolar field in Cartesian coordinates defined by in_cell.
+ * @param out_field_lor  Lorentz field in Cartesian coordinates defined by in_cell.
+ */
 void RotataSum(const double *in_positions, 
 		  const double *in_fc, const double *in_K, const double *in_phi,
           const double *in_muonpos, const int * in_supercell, const double *in_cell, 
           const double radius, const unsigned int nnn_for_cont, const double cont_radius, 
-          unsigned int size, 
+          unsigned int in_natoms, 
           const double *in_axis, unsigned int in_nangles,
           double *out_field_cont, double *out_field_dip, double *out_field_lor)
 {
@@ -64,7 +105,7 @@ void RotataSum(const double *in_positions,
     
 #ifdef _DEBUG    
     printf("I use: %i %i %i\n",scx, scy, scz);    
-    printf("Size is: %i\n",size);
+    printf("Total atoms: %i\n",in_natoms);
     printf("N Angles: %u\n",in_nangles);
 #endif
     
@@ -126,7 +167,7 @@ void RotataSum(const double *in_positions,
             for (k = 0; k < scz; ++k)
             {
                 // loop over atoms
-                for (a = 0; a < size; ++a)
+                for (a = 0; a < in_natoms; ++a)
                 {
                     
                     // atom position in reduced coordinates
@@ -147,7 +188,7 @@ void RotataSum(const double *in_positions,
                     {
                         // calculate magnetic moment
 #ifdef _ALTERNATE_FC_INPUT
-                        printf("ERROR!!! If you see this the extension compilation went wrong!\n");  
+                        printf("ERROR!!! If you see this in the Python extension something went wrong!\n");
                          sk.x = in_fc[6*a];   sk.y = in_fc[6*a+1]; sk.z = in_fc[6*a+2];
                         isk.x = in_fc[6*a+3];isk.y = in_fc[6*a+4];isk.z = in_fc[6*a+5];
 #else

@@ -5,9 +5,9 @@
 #include "vec3.h"
 
 typedef struct {
-	unsigned int nElements;
-	double * ranks; // ,ust be positive
-	struct vec3 * elements;
+	unsigned int nElements; /**< Number of elements in the pile. */
+	double * ranks;  /**< Scalar value to weight the elements.  Must be positive */
+	struct vec3 * elements; /**< Pointer to the elements. */
 } pile;
 
 void pile_init(pile * p, unsigned int nElements);

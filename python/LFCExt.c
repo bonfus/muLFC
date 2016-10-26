@@ -1,3 +1,11 @@
+/**
+ * @file LFCExt.c
+ * @author Pietro Bonfa
+ * @date 9 Sep 2016
+ * @brief Dipolar tensor calculator, Python extension
+ *     
+ */
+
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include "Python.h"
@@ -12,10 +20,9 @@
 #define PyArray_SHAPE PyArray_DIMS
 #endif
 
-static char module_docstring[] = "This module provides the Fields and the DipolarTensor functions.";
-static char py_lfcext_fields_docstring[] = "The Fields calculation.";
+static char module_docstring[] = "This module provides two functions: Fields and DipolarTensor.";
+static char py_lfcext_fields_docstring[] = "Calculate the Local Field components calculation.";
 static char py_lfcext_dt_docstring[] = "Dipolar tensor calculation.";
-     
 
 
 static PyObject * py_lfcext_fields(PyObject *self, PyObject *args) {
