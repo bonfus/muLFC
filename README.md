@@ -47,3 +47,8 @@ To install the python extension you can do
 The library and the python extension are independent and
 can be installed together or separately.
 
+
+Usage
+-----
+
+See documentation of the various functions.
