@@ -159,6 +159,8 @@ class LocalFields(object):
             raise TypeError( "Cannot set value for ACont" )
 
 
+def get_version():
+    return [0,0,1]
 
 
 
