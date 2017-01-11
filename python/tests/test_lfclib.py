@@ -1,4 +1,4 @@
-import lfcext, unittest
+import lfclib, unittest
 import numpy as np
 
 # http://stackoverflow.com/a/6802723
@@ -36,7 +36,7 @@ class TestLFCExtension(unittest.TestCase):
         nnn = 0
         rc=1.
         
-        c,d,l = lfcext.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
+        c,d,l = lfclib.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
         
         # zero hyperfine field since zero nnn
         np.testing.assert_array_equal(c,np.zeros(3))
@@ -46,14 +46,14 @@ class TestLFCExtension(unittest.TestCase):
         
         mu = np.array([0.5,0.,0.])
         
-        c,d,l = lfcext.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
+        c,d,l = lfclib.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
         
         # (1/(4pi))magnetic_constant⋅(1 bohr_magneton/(1 angstrom^3)) = 0.92740095 tesla
         np.testing.assert_array_almost_equal(d, np.array([0,0,-0.92740095]) )
         
         mu2 = np.array([0.654,0.,0.])
 
-        c,d2,l = lfcext.Fields('s', p,fc,k,phi,mu2,sc,latpar,r,nnn,rc)
+        c,d2,l = lfclib.Fields('s', p,fc,k,phi,mu2,sc,latpar,r,nnn,rc)
         
         # ratios must be like 1/r^3
         np.testing.assert_array_almost_equal(d2, np.array([0,0,-0.92740095])*(1./(np.linalg.norm(mu2*2.))**3) )
@@ -79,7 +79,7 @@ class TestLFCExtension(unittest.TestCase):
         rc=6.
         
         
-        c,d,l = lfcext.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
+        c,d,l = lfclib.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
         
         #now rotate lattice system and recalculate
         rmat = rotation_matrix([3.,4.,5.],1.86)
@@ -93,7 +93,7 @@ class TestLFCExtension(unittest.TestCase):
         rfc = np.zeros_like(fc)
         rfc[0] = np.dot(rmat, fc[0])
         
-        cr,dr,lr = lfcext.Fields('s', p,rfc,k,phi,mu,sc,rlatpar,r,nnn,rc)
+        cr,dr,lr = lfclib.Fields('s', p,rfc,k,phi,mu,sc,rlatpar,r,nnn,rc)
 
         np.testing.assert_array_almost_equal(c,np.dot(mrmat,cr))
         np.testing.assert_array_almost_equal(d,np.dot(mrmat,dr))
@@ -121,7 +121,7 @@ class TestLFCExtension(unittest.TestCase):
         
         
         # rotation with axis parallel to local moment
-        c,d,l = lfcext.Fields('r', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles,axis)
+        c,d,l = lfclib.Fields('r', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles,axis)
         
         # this tests that nothing changes since we are rotating with an
         # axis parallel to the moment direction
@@ -133,7 +133,7 @@ class TestLFCExtension(unittest.TestCase):
         nangles=4
 
         
-        c,d,l = lfcext.Fields('r', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles,axis)
+        c,d,l = lfclib.Fields('r', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles,axis)
         
         
         np.testing.assert_array_almost_equal(d, np.array([[0,0,-0.92740095],
@@ -159,7 +159,7 @@ class TestLFCExtension(unittest.TestCase):
         
         nangles=4
         
-        c,d,l = lfcext.Fields('i', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles)
+        c,d,l = lfclib.Fields('i', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles)
         
         # N.B.: this rotater with the opposite angle with respect to the
         #       rotate function!
@@ -190,19 +190,19 @@ class TestLFCExtension(unittest.TestCase):
         rc=10.
         
         #### simple tests with phase
-        refc,refd,refl = lfcext.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
-        refcr,refdr,reflr = lfcext.Fields('r', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,10,np.array([0,1.,0]))
+        refc,refd,refl = lfclib.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
+        refcr,refdr,reflr = lfclib.Fields('r', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,10,np.array([0,1.,0]))
         
         
         phi= np.array([0.25,])
         
-        c,d,l = lfcext.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
+        c,d,l = lfclib.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
         
         np.testing.assert_array_almost_equal(c, np.zeros(3))
         np.testing.assert_array_almost_equal(d, np.zeros(3))
         np.testing.assert_array_almost_equal(l, np.zeros(3))
 
-        c,d,l = lfcext.Fields('r', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,10,np.array([0,1.,0]))
+        c,d,l = lfclib.Fields('r', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,10,np.array([0,1.,0]))
         
         np.testing.assert_array_almost_equal(c, np.zeros([10,3]))
         np.testing.assert_array_almost_equal(d, np.zeros([10,3]))
@@ -211,14 +211,14 @@ class TestLFCExtension(unittest.TestCase):
 
         phi= np.array([0.5,])
        
-        c,d,l = lfcext.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
+        c,d,l = lfclib.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
         
         np.testing.assert_array_almost_equal(c, -refc)
         np.testing.assert_array_almost_equal(d, -refd)
         np.testing.assert_array_almost_equal(l, -refl)
         
         
-        c,d,l = lfcext.Fields('r', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,10,np.array([0,1.,0]))
+        c,d,l = lfclib.Fields('r', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,10,np.array([0,1.,0]))
         np.testing.assert_array_almost_equal(c, -refcr)
         np.testing.assert_array_almost_equal(d, -refdr)
         np.testing.assert_array_almost_equal(l, -reflr)
@@ -245,14 +245,14 @@ class TestLFCExtension(unittest.TestCase):
         nnn = 1
         rc=10.
         
-        refc,refd,refl = lfcext.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
+        refc,refd,refl = lfclib.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
         
         # no use the equivalent order without phase
         phi= np.array([0.,])
         #pi/4 is sqrt(2)/2
         fc = np.array([[0.,0.,np.sqrt(2.)/2.]],dtype=np.complex)
         
-        c,d,l = lfcext.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
+        c,d,l = lfclib.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
         
         np.testing.assert_array_almost_equal(c, refc)
         np.testing.assert_array_almost_equal(d, refd)
@@ -274,12 +274,12 @@ class TestLFCExtension(unittest.TestCase):
         nnn = 1
         rc=5.
         
-        refc,refd,refl = lfcext.Fields('i', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,8)
+        refc,refd,refl = lfclib.Fields('i', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,8)
         
         # no use the equivalent order without phase
         phi= np.array([0.,])
         
-        c,d,l = lfcext.Fields('i', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,8)
+        c,d,l = lfclib.Fields('i', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,8)
         
         # shifted by one angle (that is the phase)
         np.testing.assert_array_almost_equal(np.take(c,range(1,9),mode='wrap',axis=0), refc)
@@ -304,7 +304,7 @@ class TestLFCExtension(unittest.TestCase):
         rc=10.
         
         #### simple tests with phase
-        c,d,l = lfcext.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
+        c,d,l = lfclib.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc)
         np.testing.assert_array_almost_equal(d, np.zeros(3))
         
         # this works with a large grid but then unit testing is slow!
@@ -339,11 +339,11 @@ class TestLFCExtension(unittest.TestCase):
         latpar = np.diag([2.,2.,2.])
         
         r = 10.
-        res = lfcext.DipolarTensor(p,mu,sc,latpar,r)
+        res = lfclib.DipolarTensor(p,mu,sc,latpar,r)
         np.testing.assert_array_almost_equal(res, np.zeros([3,3]))
         
         mu = np.array([0.25,0.25,0.25])
-        res = lfcext.DipolarTensor(p,mu,sc,latpar,r)
+        res = lfclib.DipolarTensor(p,mu,sc,latpar,r)
         np.testing.assert_array_almost_equal(np.trace(res), np.zeros([3]))
         np.testing.assert_array_almost_equal(res, res.copy().T)
         
@@ -360,11 +360,11 @@ class TestLFCExtension(unittest.TestCase):
         latpar = np.array([[1.,0,0],[0,2.,0],[0,0,3.]])
         
         r = 10.
-        res = lfcext.DipolarTensor(p,mu,sc,latpar,r)
+        res = lfclib.DipolarTensor(p,mu,sc,latpar,r)
         np.testing.assert_array_almost_equal(np.trace(res), np.zeros([3]))
         
         mu = np.array([0.6,0.2,0.3])
-        res = lfcext.DipolarTensor(p,mu,sc,latpar,r)
+        res = lfclib.DipolarTensor(p,mu,sc,latpar,r)
         np.testing.assert_array_almost_equal(np.trace(res), np.zeros([3]))
         np.testing.assert_array_almost_equal(res, res.copy().T)
         

@@ -5,7 +5,7 @@ import numpy as np
 from copy import deepcopy
 
 
-import lfcext
+import lfclib
 
 
 class LocalFields(object):
@@ -341,11 +341,11 @@ def locfield(lattice_params, atomic_positions, fourier_components, propagation_v
     # if is outside for (minimal) sake of performances
     for mu in muon_positions:
         if ctype == 's' or ctype == 'sum':
-            res.append(LocalFields(*lfcext.Fields(ctype, p,fc,k,phi,mu,sc,latpar,r,nnn,rc)))
+            res.append(LocalFields(*lfclib.Fields(ctype, p,fc,k,phi,mu,sc,latpar,r,nnn,rc)))
         elif ctype == 'i' or ctype == 'incommensurate':
-            res.append(LocalFields(*lfcext.Fields(ctype, p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles)))
+            res.append(LocalFields(*lfclib.Fields(ctype, p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles)))
         elif ctype == 'r' or ctype == 'rotate':
-            res.append(LocalFields(*lfcext.Fields(ctype, p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles,axis)))
+            res.append(LocalFields(*lfclib.Fields(ctype, p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles,axis)))
     
     return res
     
@@ -398,7 +398,7 @@ def dipten(lattice_params, magnetic_atom_positions, muon_positions, supercellsiz
     
     res = []
     for mu in muon_positions:
-        res.append(lfcext.DipolarTensor(p,np.array(mu),sc,latpar,r))
+        res.append(lfclib.DipolarTensor(p,np.array(mu),sc,latpar,r))
 
     return res
 

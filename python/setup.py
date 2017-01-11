@@ -79,13 +79,13 @@ setup(name='LFC',
       author_email='pietro.bonfa@fis.unipr.it',
       url='https://github.com/bonfus/muesr',
       packages=['LFC',],
-      ext_modules=[Extension('lfcext', sources = ['LFCExt.c',]+src_sources,
+      ext_modules=[Extension('lfclib', sources = ['lfclib.c',]+src_sources,
                                       libraries=['m',],
                                       include_dirs=numpy_include_dir)],
-     package_dir={'LFC': 'LFC' },
+     package_dir={'LFC': '.' },
      requires=[
           'numpy',
      ],
-     test_suite="LFC.tests",
+     test_suite="tests",
      cmdclass={ 'build_ext': build_ext_compiler_check }
      )

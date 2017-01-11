@@ -1,5 +1,5 @@
 /**
- * @file LFCExt.c
+ * @file lfclib.c
  * @author Pietro Bonfa
  * @date 9 Sep 2016
  * @brief Dipolar tensor calculator, Python extension
@@ -21,10 +21,10 @@
 #endif
 
 static char module_docstring[] = "This module provides two functions: Fields and DipolarTensor.";
-static char py_lfcext_fields_docstring[] = "Calculate the Local Field components: dipolar, Lorentz and Contact\n"
+static char py_lfclib_fields_docstring[] = "Calculate the Local Field components: dipolar, Lorentz and Contact\n"
 "\n"
 "    This function calculates the magnetic field (in Tesla) at the muon site.\n"
-"    Please consider using the wrapper function locfield by importing the LFC module.\n"
+"    Consider using the wrapper function locfield by importing the LFC module.\n"
 "\n"
 "    Parameters\n"
 "    ----------\n"
@@ -68,10 +68,10 @@ static char py_lfcext_fields_docstring[] = "Calculate the Local Field components
 
 
 
-static char py_lfcext_dt_docstring[] = "Dipolar tensor calculation. It is a wraper to dipolartensor.c\n"
+static char py_lfclib_dt_docstring[] = "Dipolar tensor calculation.\n"
 "\n"
-"    This function calculates the magnetic field (in Tesla) at the muon site.\n"
-"    Please consider using the wrapper function locfield by importing the LFC module.\n"
+"    This function calculates the dipolar tensor at the muon site.\n"
+"    Consider using the wrapper function dipten by importing the LFC module.\n"
 "\n"
 "    Parameters\n"
 "    ----------\n"
@@ -96,7 +96,7 @@ static char py_lfcext_dt_docstring[] = "Dipolar tensor calculation. It is a wrap
 
 
 
-static PyObject * py_lfcext_fields(PyObject *self, PyObject *args) {
+static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   /* input variables */
   char* calc_type = NULL;
   unsigned int nnn=0;
@@ -528,7 +528,7 @@ static PyObject * py_lfcext_fields(PyObject *self, PyObject *args) {
 }
 
 
-static PyObject * py_lfcext_dt(PyObject *self, PyObject *args) {
+static PyObject * py_lfclib_dt(PyObject *self, PyObject *args) {
     
   double r=0.0;
     
@@ -631,10 +631,10 @@ static PyObject * py_lfcext_dt(PyObject *self, PyObject *args) {
 
 }
 
-static PyMethodDef lfcext_methods[] =
+static PyMethodDef lfclib_methods[] =
 {
-  {"Fields", (PyCFunction)py_lfcext_fields, METH_VARARGS, py_lfcext_fields_docstring},
-  {"DipolarTensor", (PyCFunction)py_lfcext_dt, METH_VARARGS, py_lfcext_dt_docstring},
+  {"Fields", (PyCFunction)py_lfclib_fields, METH_VARARGS, py_lfclib_fields_docstring},
+  {"DipolarTensor", (PyCFunction)py_lfclib_dt, METH_VARARGS, py_lfclib_dt_docstring},
   {NULL}  /* sentinel */
 };
 
@@ -642,10 +642,10 @@ static PyMethodDef lfcext_methods[] =
 #if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef moduledef = {
   PyModuleDef_HEAD_INIT,
-  "lfcext",            /* m_name */
+  "lfc",            /* m_name */
   module_docstring,    /* m_doc */
   -1,                  /* m_size */
-  lfcext_methods,      /* m_methods */
+  lfclib_methods,      /* m_methods */
   NULL,                /* m_reload */
   NULL,                /* m_traverse */
   NULL,                /* m_clear */
@@ -656,15 +656,15 @@ static struct PyModuleDef moduledef = {
 
 PyMODINIT_FUNC
 #if PY_MAJOR_VERSION >= 3
-PyInit_lfcext(void)
+PyInit_lfclib(void)
 #else
-initlfcext(void)
+initlfclib(void)
 #endif
 {
 #if PY_MAJOR_VERSION >= 3
   PyObject *module = PyModule_Create(&moduledef);
 #else
-  (void) Py_InitModule("lfcext", lfcext_methods);
+  (void) Py_InitModule("lfclib", lfclib_methods);
 #endif
 
   import_array(); /* Must be present for NumPy */
