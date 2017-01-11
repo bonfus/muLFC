@@ -2,7 +2,7 @@ Local Field Components
 ======================
 
 LFC is a minimal library to facilitate the evaluation of the local field at the muon site. 
-
+The original code comes from the muesr repository.
 
 
 Installing LFC
@@ -38,14 +38,13 @@ make install
 To install the python extension you can do
 
 ```bash
-   cd python
-   python setup.py build
-   python setup.py test
-   python setup.py install
+cd python
+python setup.py build
+python setup.py test
+python setup.py install
 ```
 
-The library and the python extension are independent and
-can be installed together or separately.
+The library and the python extension are independent from each other.
 
 
 Usage
