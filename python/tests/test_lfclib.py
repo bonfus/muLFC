@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import lfclib, unittest
 import numpy as np
 
