@@ -12,7 +12,7 @@ various target platforms.
 
 ### Prerequisites
 
-The LFC C library have no dependencies. However, cmake is
+The LFC C library has no dependencies. However, cmake is
 needed to compile the code.
 
 The python extension has the following dependencies:
