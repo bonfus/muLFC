@@ -1,9 +1,11 @@
 /**
  * @file dipolartensor.c
+ * @author Ifeanyi 
+ * @date   27 Jan 2017
  * @author Pietro Bonfa
  * @date 9 Sep 2016
  * @brief Dipolar tensor calculator.
- *     Here typically goes a more extensive explanation of what the header
+ * 
  * 
  */
 
