@@ -190,7 +190,7 @@ void  SimpleSum(const double *in_positions,
     
 #pragma omp parallel shared(MCont) // remember data race!
 {    
-#pragma omp for collapse(3) private(i,j,k,a,r,n,atmpos,sk,isk,phi,R,c,s,m,u,onebrcube) reduction(+:Bx,By,Bz,BLorx,BLory,BLorz)
+#pragma omp for collapse(3) schedule(guided,20)  private(i,j,k,a,r,n,atmpos,sk,isk,phi,R,c,s,m,u,onebrcube) reduction(+:Bx,By,Bz,BLorx,BLory,BLorz)
     for (i = 0; i < scx; ++i)
     {
         for (j = 0; j < scy; ++j)
@@ -258,10 +258,10 @@ void  SimpleSum(const double *in_positions,
 #ifdef _DEBUG                      
 							printf("Adding moment to Cont: n: %e, m: %e %e %e! (Total: %d)\n", n, m.x,m.y,m.z,nnn_for_cont);
 #endif						// We add the moment multiplied by r^3 and then devide by Sum ^N r^3
-                            #pragma omp critical
-                            {
+#pragma omp critical
+{
                                 pile_add_element(&MCont, pow(n,CONT_SCALING_POWER), vec3_muls(1./pow(n,CONT_SCALING_POWER),m));
-                            }
+}
 						}
                         
                         

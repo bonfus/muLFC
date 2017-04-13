@@ -276,7 +276,7 @@ void FastIncommSum(const double *in_positions,
 // parallel execution starts here
 // the shared variables are listed just to remember about data races!
 // other variable shaed by default: refatmpos,atmpos,phi,Ahelix,Bhelix
-#pragma omp parallel shared(SDip,CDip,SLor,CLor,SCont,CCont) 
+#pragma omp parallel shared(SDip,CDip,SLor,CLor,SCont,CCont,scx,scy,scz,in_positions) 
 {
 #pragma omp for collapse(3) private(i,j,k,a,r,n,c,s,u,crysvec,onebrcube,atmpos)
     for (i = 0; i < scx; ++i)
