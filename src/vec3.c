@@ -65,3 +65,12 @@ double vec3_dot(struct vec3 v, struct vec3 u)
 {
     return v.x*u.x + v.y*u.y + v.z*u.z;
 }
+
+struct vec3 vec3_cross(struct vec3 u, struct vec3 v)
+{
+    struct vec3 t;
+	  t.x = u.y * v.z - u.z * v.y;
+	  t.y = u.z * v.x - u.x * v.z;
+	  t.z = u.x * v.y - u.y * v.x;
+	  return t;
+}
