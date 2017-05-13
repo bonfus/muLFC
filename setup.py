@@ -82,7 +82,7 @@ setup(name='LFC',
       ext_modules=[Extension('lfclib', sources = ['python/lfclib.c',]+src_sources,
                                       libraries=['m',],
                                       include_dirs=numpy_include_dir)],
-     package_dir={'LFC': '.' },
+     package_dir={'LFC': 'python' },
      requires=[
           'numpy',
      ],
