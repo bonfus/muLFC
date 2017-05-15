@@ -162,7 +162,7 @@ class TestLFCExtension(unittest.TestCase):
         
         c,d,l = lfclib.Fields('i', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles)
         
-        # N.B.: this rotater with the opposite angle with respect to the
+        # N.B.: this rotates with the opposite angle with respect to the
         #       rotate function!
         np.testing.assert_array_almost_equal(d, np.array([[0,0,-0.92740095],
                                                           [0,-0.92740095,0],
