@@ -83,8 +83,8 @@ setup(name='LFC',
                                       libraries=['m',],
                                       include_dirs=numpy_include_dir)],
      package_dir={'LFC': 'python' },
-     requires=[
-          'numpy',
+     install_requires=[
+          'numpy >= 1.6',
      ],
      test_suite="tests",
      cmdclass={ 'build_ext': build_ext_compiler_check }
