@@ -137,14 +137,14 @@ void  SimpleSum(const double *in_positions,
 #endif
 
     sc_lat = mat3_mul(
-                        mat3_diag((float) scx, (float) scy, (float) scz),
+                        mat3_diag((double) scx, (double) scy, (double) scz),
                         sc_lat);
     
     
     // muon position in reduced coordinates
-    muonpos.x =  (in_muonpos[0] + (scx/2) ) / (float) scx;
-    muonpos.y =  (in_muonpos[1] + (scy/2) ) / (float) scy;
-    muonpos.z =  (in_muonpos[2] + (scz/2) ) / (float) scz;
+    muonpos.x =  (in_muonpos[0] + (scx/2) ) / (double) scx;
+    muonpos.y =  (in_muonpos[1] + (scy/2) ) / (double) scy;
+    muonpos.z =  (in_muonpos[2] + (scz/2) ) / (double) scz;
 
 #ifdef _DEBUG
     printf("Muon pos (frac): %e %e %e\n",muonpos.x,muonpos.y,muonpos.z);
@@ -202,9 +202,9 @@ void  SimpleSum(const double *in_positions,
                 {
                     
                     // atom position in reduced coordinates
-                    atmpos.x = ( in_positions[3*a] + (float) i) / (float) scx;
-                    atmpos.y = ( in_positions[3*a+1] + (float) j) / (float) scy;
-                    atmpos.z = ( in_positions[3*a+2] + (float) k) / (float) scz;
+                    atmpos.x = ( in_positions[3*a] + (double) i) / (double) scx;
+                    atmpos.y = ( in_positions[3*a+1] + (double) j) / (double) scy;
+                    atmpos.z = ( in_positions[3*a+2] + (double) k) / (double) scz;
                     
 
                     
@@ -234,7 +234,7 @@ void  SimpleSum(const double *in_positions,
                         //printf("isk = %e %e %e\n", isk.x, isk.y, isk.z);
                         
                         
-                        R.x = (float) i; R.y = (float) j; R.z = (float) k; 
+                        R.x = (double) i; R.y = (double) j; R.z = (double) k; 
                         
                         c = cos ( 2.0*M_PI * (vec3_dot(K,R) + phi ));
                         s = sin ( 2.0*M_PI * (vec3_dot(K,R) + phi ));
