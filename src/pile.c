@@ -26,11 +26,12 @@
  */
 void pile_init(pile * p, unsigned int nElements)
 {
+	unsigned int i;
 	p->nElements = nElements;
 	p->ranks = malloc(nElements * sizeof(double));
 	p->elements = malloc(nElements * sizeof(struct vec3));
     
-    unsigned int i;
+    
     for (i = 0; i < nElements; ++i)
     {
         p->ranks[i] = -1.0;
@@ -73,12 +74,12 @@ void pile_add_element(pile * p, double rank, struct vec3 v)
  */
 void pile_move_elements_from_position(pile * p, unsigned int pos)
 {
+	unsigned int i;
 	// the first -1 is for 0 indexing
 	// the second -1 is becouse if only the last element must be moved it is thrashed!
 	if (p->nElements < 2) {
 		return;
 	}
-	unsigned int i;
 	for (i = (p->nElements-1) ; i-- > pos ;)
 	{
 		p->ranks[i+1] = p->ranks[i];

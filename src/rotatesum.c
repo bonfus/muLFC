@@ -89,7 +89,13 @@ void RotataSum(const double *in_positions,
     // for rotation
     struct vec3 axis;
     struct mat3 rmat;
-    
+	struct vec3 * B = malloc(in_nangles * sizeof(struct vec3));
+	struct vec3 * BLor = malloc(in_nangles * sizeof(struct vec3));
+	pile * MCont = malloc(in_nangles * sizeof(pile));
+	struct vec3 BCont;
+	int NofM = 0;
+	double SumOfWeights = 0;
+
     // defines axis
     axis.x = in_axis[0];
     axis.y = in_axis[1];
@@ -148,11 +154,7 @@ void RotataSum(const double *in_positions,
 #ifdef _DEBUG
     printf("Muon pos is: %e %e %e\n",muonpos.x,muonpos.y,muonpos.z);
 #endif
-
-    struct vec3 * B = malloc(in_nangles * sizeof(struct vec3));
-    struct vec3 * BLor = malloc(in_nangles * sizeof(struct vec3));
-    pile * MCont = malloc(in_nangles * sizeof(pile));
-    
+   
     for (angn = 0; angn < in_nangles; ++angn)
     {
         B[angn] = vec3_zero();
@@ -293,9 +295,8 @@ void RotataSum(const double *in_positions,
     // Contact Filed
     
     // Contact Field
-    struct vec3 BCont;
-    int NofM = 0;
-    double SumOfWeights = 0;
+    NofM = 0;
+    SumOfWeights = 0;
     
     for (angn = 0; angn < in_nangles; ++angn)
     {

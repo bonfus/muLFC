@@ -131,8 +131,20 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   double * dip=NULL, *cont=NULL, *lor=NULL;
   npy_intp *out_dim=NULL;
   PyArrayObject *odip, *ocont, *olor;
+  /* General validity checks */
 
+  npy_intp pndims = PyArray_NDIM(positions);
+  npy_intp fcndims = PyArray_NDIM(FC);
 
+  npy_intp * pShape = PyArray_SHAPE(positions);
+  npy_intp * fcShape = PyArray_SHAPE(FC);
+
+  //npy_intp * phiSpahe = (npy_intp *) malloc(PyArray_NDIM(Phi) * sizeof(npy_intp));
+  npy_intp * phiSpahe = PyArray_SHAPE(Phi);
+
+  int i;
+  int nd = 1;
+  npy_cdouble v;
 
   /* put arguments into variables */
   if (!PyArg_ParseTuple(args, "sOOOOOOOdId|IO", &calc_type, 
@@ -271,13 +283,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     }
   }
   
-  /* General validity checks */
-  
-  npy_intp pndims = PyArray_NDIM(positions);
-  npy_intp fcndims = PyArray_NDIM(FC);
 
-  npy_intp * pShape = PyArray_SHAPE(positions);
-  npy_intp * fcShape = PyArray_SHAPE(FC);
   // The first condition is impossible since it is implied by the 
   //  PyArray_FROMANY function above. That function guaranties that the 
   //  comparison of the shape is fine.
@@ -299,9 +305,6 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     return NULL;
   }
   
-  
-  //npy_intp * phiSpahe = (npy_intp *) malloc(PyArray_NDIM(Phi) * sizeof(npy_intp));
-  npy_intp * phiSpahe = PyArray_SHAPE(Phi);
   if (phiSpahe[0] != pShape[0]) {
     Py_DECREF(positions);
     Py_DECREF(FC);
@@ -365,15 +368,15 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     return NULL;          
   }
   
-  for (int i=0; i< num_atoms; i++){
+  for (i=0; i< num_atoms; i++){
     in_positions[3*i+0] = *(npy_float64 *) PyArray_GETPTR2(positions, i,0);
     in_positions[3*i+1] = *(npy_float64 *) PyArray_GETPTR2(positions, i,1);
     in_positions[3*i+2] = *(npy_float64 *) PyArray_GETPTR2(positions, i,2);
   }
   
   
-  npy_cdouble v;
-  for (int i=0; i< num_atoms; i++){
+
+  for (i=0; i< num_atoms; i++){
     v = *(npy_cdouble *)PyArray_GETPTR2(FC, i,0);
     in_fc[6*i+0] = v.real;
     in_fc[6*i+1] = v.imag;
@@ -391,7 +394,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   in_K[2] = *(npy_float64 *) PyArray_GETPTR1(K,2);
   
   
-  for (int i=0; i< num_atoms; i++){
+  for ( i=0; i< num_atoms; i++){
     in_phi[i] = *(npy_float64 *) PyArray_GETPTR1(Phi,i);
   }
   
@@ -427,7 +430,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   
 
   /* allocate output arrays */
-  int nd = 1;
+  nd = 1;
   if (icalc_type >= 2) {
     /* finish creating return variables */
     out_dim = (npy_intp *) malloc(2 * sizeof(npy_intp));
@@ -529,18 +532,21 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
 
 
 static PyObject * py_lfclib_dt(PyObject *self, PyObject *args) {
-    
   double r=0.0;
     
-  PyObject *opositions, *omu, *osupercell, *ocell;
+ PyObject *opositions, *omu, *osupercell, *ocell;
   
-  PyArrayObject *positions,  *mu, *supercell, *cell;
+ PyArrayObject *positions,  *mu, *supercell, *cell;
   
-  PyArrayObject *odt;
+  PyArrayObject *odt;  
+  
   int num_atoms=0;
   int * in_supercell;
+  npy_intp * pShape;// = PyArray_SHAPE(positions);
+  int nd = 2;
+  npy_intp * out_dim;// = (npy_intp *)malloc(2 * sizeof(npy_intp));
 
-  /* put arguments into variables */
+  /* put arguments into variables */ 
   if (!PyArg_ParseTuple(args, "OOOOd", 
                             &opositions, &omu, &osupercell, &ocell,&r))
   {
@@ -557,7 +563,7 @@ static PyObject * py_lfclib_dt(PyObject *self, PyObject *args) {
                                                    1, 1, NPY_ARRAY_IN_ARRAY);
   cell = (PyArrayObject *) PyArray_FROMANY(ocell, NPY_DOUBLE, 2, 2,
                                              NPY_ARRAY_IN_ARRAY);
-
+  
   /* Validate data */
   if ( !positions || !mu || !supercell || !cell) {
     Py_XDECREF(positions);
@@ -569,11 +575,10 @@ static PyObject * py_lfclib_dt(PyObject *self, PyObject *args) {
     return NULL;
   }
 
-
   /* General validity checks */
   
-  npy_intp * pShape = PyArray_SHAPE(positions);
-  
+  pShape = PyArray_SHAPE(positions);
+
   num_atoms = pShape[0];
   
   if (num_atoms == 0) {
@@ -590,8 +595,8 @@ static PyObject * py_lfclib_dt(PyObject *self, PyObject *args) {
   in_supercell[2] = *(npy_int64 *)PyArray_GETPTR1(supercell, 2);
   
  
-  int nd = 2; 
-  npy_intp * out_dim = (npy_intp *) malloc(2 * sizeof(npy_intp));
+  nd = 2; 
+  out_dim= (npy_intp *)malloc(2 * sizeof(npy_intp));
   out_dim[0] = (npy_intp) 3;
   out_dim[1] = (npy_intp) 3;
   

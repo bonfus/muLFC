@@ -94,7 +94,9 @@ void  SimpleSum(const double *in_positions,
 #endif    
     
     unsigned int a;     // counter for atoms
-    
+	struct vec3 BCont;
+	int NofM = 0; // Number of moments considered
+	double SumOfWeights = 0;
     
     
     
@@ -320,10 +322,9 @@ void  SimpleSum(const double *in_positions,
     out_field_lor[2] = BLor.z;
     
     // Contact Field
-    struct vec3 BCont;
     BCont = vec3_zero();
-    int NofM = 0; // Number of moments considered
-    double SumOfWeights = 0;
+    NofM = 0; // Number of moments considered
+    SumOfWeights = 0;
     for (i=0; i < nnn_for_cont; i++) {
 		if (MCont.ranks[i] > 0.0) {
 			BCont = vec3_add(BCont, MCont.elements[i]);

@@ -8,6 +8,7 @@ def rotation_matrix(axis, theta):
     Return the rotation matrix associated with counterclockwise rotation about
     the given axis by theta radians.
     """
+    print 'rot'
     axis = np.asarray(axis)
     theta = np.asarray(theta)
     naxis = axis/np.linalg.norm(axis)
@@ -21,7 +22,7 @@ def rotation_matrix(axis, theta):
         
 class TestLFCExtension(unittest.TestCase):
     def test_one_over_r_cube(self):
-        
+        print '1/r^3'
         p  = np.array([[0.,0.,0.]])
         fc = np.array([[0.,0.,1.]],dtype=np.complex)
         k  = np.array([0.,0.,0.])
@@ -60,7 +61,7 @@ class TestLFCExtension(unittest.TestCase):
         np.testing.assert_array_almost_equal(d2, np.array([0,0,-0.92740095])*(1./(np.linalg.norm(mu2*2.))**3) )
         
     def test_rotation_of_cart_coord(self):
-        
+        print 'rot of cart'
         p  = np.array([[0.1,0.2,0.3]])
         fc = np.array([[0.2,0.4,1.]],dtype=np.complex)
         k  = np.array([0.2,0.3,0.4])
@@ -102,6 +103,7 @@ class TestLFCExtension(unittest.TestCase):
         
         
     def test_rotate1(self):
+        print 'rot1'
         p  = np.array([[0.,0.,0.]])
         fc = np.array([[0.,0.,1.]],dtype=np.complex)
         k  = np.array([0.,0.,0.])
@@ -143,6 +145,7 @@ class TestLFCExtension(unittest.TestCase):
                                                           [0,-0.92740095,0]]))
                                                           
     def test_icommensurate(self):
+        print 'commens'
         p  = np.array([[0.,0.,0.]])
         fc = np.array([[0.,1.j,1.]],dtype=np.complex)
         k  = np.array([0.,0.,0.0])
@@ -175,6 +178,7 @@ class TestLFCExtension(unittest.TestCase):
                                                           [0,-0.92740095E-3,0]]))
                                                                                                                     
     def test_phase(self):
+        print 'phase'
         p  = np.array([[0.,0.,0.]])
         fc = np.array([[0.,0.,1.]],dtype=np.complex)
         k  = np.array([0.,0.,0.0])
@@ -289,6 +293,7 @@ class TestLFCExtension(unittest.TestCase):
         
     
     def test_null_by_symmetry(self):
+        print 'null'
         p  = np.array([[0.,0.,0.]])
         fc = np.array([[0.,0.,1.]],dtype=np.complex)
         k  = np.array([0.,0.,0.0])
@@ -326,13 +331,14 @@ class TestLFCExtension(unittest.TestCase):
 
     
     def test_dipolar_tensor(self):
+        print 'dipolar'
         # initial stupid test...
         ###### TODO : do a reasonable test!!!  ######
         p  = np.array([[0.,0.,0.]])
         fc = np.array([[0.,0.,1.]],dtype=np.complex)
         k  = np.array([0.,0.,0.0])
         
-        phi= np.array([0.,])
+        phi= np.array([0.,0.,0.])
         
         mu = np.array([0.5,0.5,0.5])
         
@@ -340,15 +346,20 @@ class TestLFCExtension(unittest.TestCase):
         latpar = np.diag([2.,2.,2.])
         
         r = 10.
+        print '1'
         res = lfclib.DipolarTensor(p,mu,sc,latpar,r)
+        print '2'
         np.testing.assert_array_almost_equal(res, np.zeros([3,3]))
         
         mu = np.array([0.25,0.25,0.25])
+        print '3'
         res = lfclib.DipolarTensor(p,mu,sc,latpar,r)
+        print '4'
         np.testing.assert_array_almost_equal(np.trace(res), np.zeros([3]))
         np.testing.assert_array_almost_equal(res, res.copy().T)
         
     def test_dipolar_tensor_traceless(self):
+        print 'dipolar 2'
         p  = np.array([[0.,0.,0.]])
         fc = np.array([[0.,0.,1.]],dtype=np.complex)
         k  = np.array([0.,0.,0.0])
