@@ -133,14 +133,14 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   PyArrayObject *odip, *ocont, *olor;
   /* General validity checks */
 
-  npy_intp pndims = PyArray_NDIM(positions);
-  npy_intp fcndims = PyArray_NDIM(FC);
+  npy_intp pndims; 
+  npy_intp fcndims; 
 
-  npy_intp * pShape = PyArray_SHAPE(positions);
-  npy_intp * fcShape = PyArray_SHAPE(FC);
+  npy_intp * pShape; 
+  npy_intp * fcShape; 
 
   //npy_intp * phiSpahe = (npy_intp *) malloc(PyArray_NDIM(Phi) * sizeof(npy_intp));
-  npy_intp * phiSpahe = PyArray_SHAPE(Phi);
+  npy_intp * phiSpahe; 
 
   int i;
   int nd = 1;
@@ -283,7 +283,10 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     }
   }
   
-
+  pndims = PyArray_NDIM(positions);
+  fcndims = PyArray_NDIM(FC);
+  pShape = PyArray_SHAPE(positions);
+  fcShape = PyArray_SHAPE(FC);
   // The first condition is impossible since it is implied by the 
   //  PyArray_FROMANY function above. That function guaranties that the 
   //  comparison of the shape is fine.
@@ -304,7 +307,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
 		    "same shape.");
     return NULL;
   }
-  
+  phiSpahe = PyArray_SHAPE(Phi);
   if (phiSpahe[0] != pShape[0]) {
     Py_DECREF(positions);
     Py_DECREF(FC);
