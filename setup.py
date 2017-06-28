@@ -3,7 +3,7 @@ import sys
 from os import path
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
-
+import distutils
 sources = ['simplesum.c', \
            'rotatesum.c', \
            'fastincommsum.c', \
@@ -38,7 +38,14 @@ for compiler, args in [
         ('gcc', ['-O3', '-g0', '-std=c99']),
         ('unix', ['-O3', '-g0', '-std=c99'])]:
     COMPILE_ARGS[compiler] += args
-    
+
+compiler=distutils.ccompiler.get_default_compiler()
+LIB_ARGS = []
+if compiler == "msvc":
+    LIB_ARGS.append("")
+else:
+    LIB_ARGS.append("m")
+
 
 # Ugly hack to have openMP as option
 if "--with-openmp" in sys.argv:
@@ -69,9 +76,6 @@ class build_ext_compiler_check(build_ext):
         
         build_ext.build_extensions(self)
 
-
-
-    
 setup(name='LFC',
       version='0.1',
       description='Local Field Components (or lighting fast calculator) for muesr package',
@@ -80,7 +84,7 @@ setup(name='LFC',
       url='https://github.com/bonfus/muesr',
       packages=['LFC',],
       ext_modules=[Extension('lfclib', sources = ['python/lfclib.c',]+src_sources,
-                                     # libraries=['m',],
+                                      libraries=[],
                                       include_dirs=numpy_include_dir)],
      package_dir={'LFC': 'python' },
      install_requires=[
