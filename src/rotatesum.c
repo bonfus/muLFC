@@ -324,7 +324,6 @@ void RotataSum(const double *in_positions,
 		out_field_cont[3*angn+1] = BCont.y;
 		out_field_cont[3*angn+2] = BCont.z; 
 	}   
-    
-}
+}					 
 
 

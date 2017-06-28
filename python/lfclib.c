@@ -133,14 +133,14 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   PyArrayObject *odip, *ocont, *olor;
   /* General validity checks */
 
-  npy_intp pndims; 
-  npy_intp fcndims; 
+  npy_intp pndims=NULL; 
+  npy_intp fcndims=NULL; 
 
-  npy_intp * pShape; 
-  npy_intp * fcShape; 
+  npy_intp * pShape=NULL; 
+  npy_intp * fcShape=NULL; 
 
   //npy_intp * phiSpahe = (npy_intp *) malloc(PyArray_NDIM(Phi) * sizeof(npy_intp));
-  npy_intp * phiSpahe; 
+  npy_intp * phiSpahe=NULL; 
 
   int i;
   int nd = 1;
@@ -302,7 +302,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     Py_DECREF(supercell);
     Py_DECREF(cell);       
     Py_XDECREF(rot_axis);   // Null in case it is optional
-    
+	
     PyErr_SetString(PyExc_RuntimeError, "positions and FC arrays must have "
 		    "same shape.");
     return NULL;
@@ -317,8 +317,8 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     Py_DECREF(supercell);
     Py_DECREF(cell);       
     Py_XDECREF(rot_axis);   // Null in case it is optional      
-    
-    PyErr_SetString(PyExc_RuntimeError, "positions and Phi arrays must have "
+	
+	PyErr_SetString(PyExc_RuntimeError, "positions and Phi arrays must have "
 		    "same shape[0].");
     return NULL;
   }
@@ -520,7 +520,6 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     free(in_cell);          
   if (in_axis != NULL)            // Null in case it is optional     
     free(in_axis);  
-
   Py_DECREF(positions);
   Py_DECREF(FC);
   Py_DECREF(K);

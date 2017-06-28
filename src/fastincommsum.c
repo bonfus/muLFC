@@ -544,7 +544,14 @@ void FastIncommSum(const double *in_positions,
     // free stuff used for contact field
     pile_free(&CCont);
     pile_free(&SCont);
-
+	free(stagmom);
+	free(refatmpos); 
+	free(Ahelix); 
+	free(Bhelix); 
+	free(SDip); 
+	free(CDip); 
+	free(SLor); 
+	free(CLor);
 }
 
 
