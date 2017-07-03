@@ -62,55 +62,55 @@ void FastIncommSum(const double *in_positions,
           double *out_field_cont, double *out_field_dip, double *out_field_lor) 
 {
 
-    unsigned int scx, scy, scz = 10; //supercell sizes
-    unsigned int i,j,k; // counters for supercells
+    unsigned int scx, scy, scz = 10; /*supercell sizes */
+    unsigned int i,j,k; /* counters for supercells */
     
     struct vec3 atmpos;
     struct vec3 muonpos;
     
     struct vec3 r;
-    struct vec3 u;   // unit vector
+    struct vec3 u;   /* unit vector */
     
     struct mat3 sc_lat;
     struct mat3 inv_sc_lat;
     
     double n;
-    double c,s; //cosine and sine of K.R
-    double onebrcube; // 1/r^3
+    double c,s; /*cosine and sine of K.R */
+    double onebrcube; /* 1/r^3 */
     
     double  phi ;
     
-    // tmp value for speed and clearness
+    /* tmp value for speed and clearness */
     struct vec3 crysvec;
     
-    double *stagmom=malloc(in_natoms*sizeof(double));                    // this is m_0
-    struct vec3 *refatmpos=malloc(in_natoms*sizeof(struct vec3));             // reference atom used to produce C and S    
+    double *stagmom=malloc(in_natoms*sizeof(double));                    /* this is m_0 */
+    struct vec3 *refatmpos=malloc(in_natoms*sizeof(struct vec3));             /* reference atom used to produce C and S     */
     struct vec3 *Ahelix=malloc(in_natoms * sizeof(struct vec3));
-	struct vec3 *Bhelix= malloc(in_natoms * sizeof(struct vec3));// two unit vectors describing the helix in the m_0 (cos(phi).a +/- sin(phi).b)
+	struct vec3 *Bhelix= malloc(in_natoms * sizeof(struct vec3));/* two unit vectors describing the helix in the m_0 (cos(phi).a +/- sin(phi).b) */
     struct vec3 *SDip= malloc(in_natoms * sizeof(struct vec3));
-	struct vec3* CDip= malloc(in_natoms * sizeof(struct vec3)); // sums of contribution providing cosine and sine prefactors
+	struct vec3* CDip= malloc(in_natoms * sizeof(struct vec3)); /* sums of contribution providing cosine and sine prefactors */
     struct vec3 *SLor= malloc(in_natoms * sizeof(struct vec3));  
-	struct vec3	*CLor= malloc(in_natoms * sizeof(struct vec3));// sums of contribution providing cosine and sine prefactors
+	struct vec3	*CLor= malloc(in_natoms * sizeof(struct vec3));/* sums of contribution providing cosine and sine prefactors */
     
     pile CCont, SCont;
     
     struct vec3 K;
     
 
-    unsigned int a, angn;     // counter for atoms
+    unsigned int a, angn;     /* counter for atoms */
 	struct vec3 tmp;
 	double angle = 0;
 	struct vec3 BDip;
 	struct vec3 BLor;
 	struct vec3 BCont;
 
-	// for contact field evaluation
+	/* for contact field evaluation */
 	struct vec3 CBCont = vec3_zero();
 	struct vec3 SBCont = vec3_zero();
-	int NofM = 0; // Number of moments considered
+	int NofM = 0; /* Number of moments considered */
 	double SumOfWeights = 0;
 
-    // initialize variables
+    /* initialize variables */
 
     
     pile_init(&CCont, nnn_for_cont);
@@ -126,7 +126,7 @@ void FastIncommSum(const double *in_positions,
         SLor[a] = vec3_zero();
     }
     
-    // define dupercell size
+    /* define dupercell size */
     scx = in_supercell[0];
     scy = in_supercell[1];
     scz = in_supercell[2];
@@ -159,14 +159,14 @@ void FastIncommSum(const double *in_positions,
     for (a = 0; a < in_natoms; ++a)
     {
                     
-        // atom position in reduced coordinates
+        /* atom position in reduced coordinates */
         atmpos.x =  in_positions[3*a] ;
         atmpos.y =  in_positions[3*a+1] ;
         atmpos.z =  in_positions[3*a+2] ;
         
         printf("Atom pos (crys): %e %e %e\n",atmpos.x,atmpos.y,atmpos.z);
         
-        // go to cartesian coordinates (in Angstrom!)
+        /* go to cartesian coordinates (in Angstrom!) */
         atmpos = mat3_vmul(atmpos,sc_lat);  
         
         printf("Atom pos (cart): %e %e %e\n",atmpos.x,atmpos.y,atmpos.z);
@@ -195,7 +195,7 @@ void FastIncommSum(const double *in_positions,
                         sc_lat);
     
     
-    // muon position in reduced coordinates
+    /* muon position in reduced coordinates */
     muonpos.x =  (in_muonpos[0] + (scx/2) ) / (float) scx;
     muonpos.y =  (in_muonpos[1] + (scy/2) ) / (float) scy;
     muonpos.z =  (in_muonpos[2] + (scz/2) ) / (float) scz;
@@ -216,8 +216,8 @@ void FastIncommSum(const double *in_positions,
 
     for (a = 0; a < in_natoms; ++a)
     {
-        // reference atom in reduced coordinates
-        //   the first atom is chosen as reference
+        /* reference atom in reduced coordinates */
+        /*   the first atom is chosen as reference */
         refatmpos[a].x =  (in_positions[3*a+0] + (scx/2) ) / (float) scx;
         refatmpos[a].y =  (in_positions[3*a+1] + (scy/2) ) / (float) scy;
         refatmpos[a].z =  (in_positions[3*a+2] + (scz/2) ) / (float) scz;
@@ -235,7 +235,7 @@ void FastIncommSum(const double *in_positions,
 
         
         
-        // now take care of magntism
+        /* now take care of magntism */
 
 #ifdef _ALTERNATE_FC_INPUT
         printf("ERROR!!! If you see this in the Python extension something went wrong!\n");
@@ -251,7 +251,7 @@ void FastIncommSum(const double *in_positions,
         Ahelix[a] = vec3_muls(1.0/stagmom[a],tmp);
 
         
-        // now B
+        /* now B */
 #ifdef _ALTERNATE_FC_INPUT
         printf("ERROR!!! If you see this in the Python extension something went wrong!\n");
         tmp.x = in_fc[6*a+3]; 
@@ -262,7 +262,7 @@ void FastIncommSum(const double *in_positions,
         tmp.y = in_fc[6*a+3]; 
         tmp.z = in_fc[6*a+5];
 #endif      
-        // check if they are the same
+        /* check if they are the same */
         if (fabs(stagmom[a] - vec3_norm(tmp))>EPS)
         {
             printf("ERROR!!! Staggered moment is different in real and imag parts of atom %u\n Use another routine!\n",a);
@@ -287,9 +287,9 @@ void FastIncommSum(const double *in_positions,
         
     }
 
-// parallel execution starts here
-// the shared variables are listed just to remember about data races!
-// other variable shaed by default: refatmpos,atmpos,phi,Ahelix,Bhelix
+/* parallel execution starts here */
+/* the shared variables are listed just to remember about data races! */
+/* other variable shaed by default: refatmpos,atmpos,phi,Ahelix,Bhelix */
 #pragma omp parallel shared(SDip,CDip,SLor,CLor,SCont,CCont,scx,scy,scz,in_positions) 
 {
 #pragma omp for collapse(3) private(i,j,k,a,r,n,c,s,u,crysvec,onebrcube,atmpos)
@@ -299,22 +299,22 @@ void FastIncommSum(const double *in_positions,
         {
             for (k = 0; k < scz; ++k)
             {
-                // loop over atoms
+                /* loop over atoms */
                 for (a = 0; a < in_natoms; ++a)
                 {
                     
-                    // atom position in reduced coordinates
+                    /* atom position in reduced coordinates */
                     atmpos.x = ( in_positions[3*a] + (float) i) / (float) scx;
                     atmpos.y = ( in_positions[3*a+1] + (float) j) / (float) scy;
                     atmpos.z = ( in_positions[3*a+2] + (float) k) / (float) scz;
                     
                     
                     
-                    // go to cartesian coordinates (in Angstrom!)
+                    /* go to cartesian coordinates (in Angstrom!) */
                     atmpos = mat3_vmul(atmpos,sc_lat);
                     
-                    //printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z);
-                    // difference between atom pos and muon pos (cart coordinates)
+                    /*printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z); */
+                    /* difference between atom pos and muon pos (cart coordinates) */
                     
                     r = vec3_sub(atmpos,muonpos);
                     
@@ -324,14 +324,14 @@ void FastIncommSum(const double *in_positions,
 
                         phi = in_phi[a];
                         
-                        // unit vector
+                        /* unit vector */
                         u = vec3_muls(1.0/n,r);
                         onebrcube = 1.0/pow(n,3);
                         
-                        // go back to fractional (crystal) definition!
-                        // !!!!! CHECK THIS DEFINITION !!!!
+                        /* go back to fractional (crystal) definition! */
+                        /* !!!!! CHECK THIS DEFINITION !!!! */
                         crysvec = mat3_vmul(vec3_sub(vec3_sub(atmpos,muonpos),refatmpos[a]),inv_sc_lat);
-                        //
+                        /* */
                         c = cos ( 2.0*M_PI * (vec3_dot(K,crysvec) + phi ) );
                         s = sin ( 2.0*M_PI * (vec3_dot(K,crysvec) + phi ) );
 #ifdef _DEBUG
@@ -366,10 +366,10 @@ void FastIncommSum(const double *in_positions,
                                         );
                         printf("SDip %d to be added : %e %e %e\n", a, tmp.x, tmp.y, tmp.z);
 #endif
-                        // sum all data
+                        /* sum all data */
                         #pragma omp critical(dipolar)
                         {
-                            // Dipolar
+                            /* Dipolar */
                             CDip[a] = vec3_add(
                                             CDip[a],
                                             vec3_add(
@@ -388,7 +388,7 @@ void FastIncommSum(const double *in_positions,
                         }
                         #pragma omp critical(lorentz)
                         {
-                            // Lorentz
+                            /* Lorentz */
                             CLor[a] = vec3_add(
                                             CLor[a],
                                             vec3_add(
@@ -404,7 +404,7 @@ void FastIncommSum(const double *in_positions,
                                             )
                                         );
                         }
-						// Contact
+						/* Contact */
 						if (n < cont_radius) {
                             #pragma omp critical(contact)
                             {
@@ -434,24 +434,24 @@ void FastIncommSum(const double *in_positions,
 }
     
     angle=0;
-    // for contact field evaluation
+    /* for contact field evaluation */
     CBCont = vec3_zero();
     SBCont = vec3_zero();
-    NofM = 0; // Number of moments considered
+    NofM = 0; /* Number of moments considered */
     SumOfWeights = 0;    
     
 #pragma omp parallel sections private(angn,angle,BDip,BLor,BCont,i) firstprivate(CBCont,SBCont,NofM,SumOfWeights)
 {
-    // first portion, dipolar fields and Lorentz
+    /* first portion, dipolar fields and Lorentz */
     #pragma omp section
     {
         for (angn = 0; angn < in_nangles; ++angn)
         {
             angle = 2*M_PI*((float) angn / (float) in_nangles);
             
-            //  === Dipolar Field ===
+            /*  === Dipolar Field === */
             BDip = vec3_zero();
-            // loop over atoms
+            /* loop over atoms */
             for (a = 0; a < in_natoms; ++a)
             {
                 BDip =  vec3_add(BDip,
@@ -465,15 +465,15 @@ void FastIncommSum(const double *in_positions,
                             );
             }
             
-            BDip = vec3_muls(0.9274009, BDip); // to tesla units
+            BDip = vec3_muls(0.9274009, BDip); /* to tesla units */
             out_field_dip[3*angn+0] = BDip.x;
             out_field_dip[3*angn+1] = BDip.y;
             out_field_dip[3*angn+2] = BDip.z;        
             
             
-            //  === Lorentz Field ===
+            /*  === Lorentz Field === */
             BLor = vec3_zero();
-            // loop over atoms
+            /* loop over atoms */
             for (a = 0; a < in_natoms; ++a)
             {
                 BLor =  vec3_add(BLor,
@@ -496,10 +496,10 @@ void FastIncommSum(const double *in_positions,
     }
 
 
-    // second portion, contact fields
+    /* second portion, contact fields */
     #pragma omp section
     {
-        //  === Contact Field ===
+        /*  === Contact Field === */
         BCont = vec3_zero();
         
         for (i=0; i < nnn_for_cont; i++) {
@@ -517,9 +517,9 @@ void FastIncommSum(const double *in_positions,
             }
         }
             
-        // (2 magnetic_constant/3)⋅1bohr_magneton   = ((2 ⋅ magnetic_constant) ∕ 3) ⋅ (1 ⋅ bohr_magneton)
-        //   ≈ 7.769376E-27((g⋅m^3) ∕ (A⋅s^2))
-        //   ≈ 7.769376 T⋅Å^3
+        /* (2 magnetic_constant/3)⋅1bohr_magneton   = ((2 ⋅ magnetic_constant) ∕ 3) ⋅ (1 ⋅ bohr_magneton) */
+        /*   ≈ 7.769376E-27((g⋅m^3) ∕ (A⋅s^2)) */
+        /*   ≈ 7.769376 T⋅Å^3 */
         
         for (angn = 0; angn < in_nangles; ++angn) {
             
@@ -532,16 +532,16 @@ void FastIncommSum(const double *in_positions,
                                         vec3_muls(sin(angle) , SBCont)
                                     )
                                 );
-            } // otherwise is zero anyway!
+            } /* otherwise is zero anyway! */
             
             out_field_cont[3*angn+0] = BCont.x;
             out_field_cont[3*angn+1] = BCont.y;
             out_field_cont[3*angn+2] = BCont.z;        
         }
     }
-} // end of omp parallel sections
+} /* end of omp parallel sections */
 
-    // free stuff used for contact field
+    /* free stuff used for contact field */
     pile_free(&CCont);
     pile_free(&SCont);
 	free(stagmom);

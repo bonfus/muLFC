@@ -35,8 +35,8 @@ LINK_ARGS = {'msvc':[],'gcc':[],'unix':[]}
 
 for compiler, args in [
         ('msvc', ['/EHsc', '/DHUNSPELL_STATIC']),
-        ('gcc', ['-O3', '-g0', '-std=c99']),
-        ('unix', ['-O3', '-g0', '-std=c99'])]:
+        ('gcc', ['-O3', '-g0', '-std=c90']),
+        ('unix', ['-O3', '-g0', '-std=c90'])]:
     COMPILE_ARGS[compiler] += args
 
 compiler=distutils.ccompiler.get_default_compiler()

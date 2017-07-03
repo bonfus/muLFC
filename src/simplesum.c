@@ -58,24 +58,24 @@ void  SimpleSum(const double *in_positions,
           double *out_field_cont, double *out_field_dip, double *out_field_lor) 
 {
 
-    unsigned int scx, scy, scz; //supercell sizes
-    unsigned int i,j,k; // counters for supercells
+    unsigned int scx, scy, scz; /*supercell sizes */
+    unsigned int i,j,k; /* counters for supercells */
     
     struct vec3 atmpos;
     struct vec3 muonpos;
     struct vec3 r;
-    struct vec3 m;   //magnetic moment of atom
-    struct vec3 u;   // unit vector
+    struct vec3 m;   /*magnetic moment of atom */
+    struct vec3 u;   /* unit vector */
         
     struct mat3 sc_lat;
     
-    double n;   // contains norm of vectors
-    double c,s; //cosine and sine of K.R
-    double onebrcube; // 1/r^3
+    double n;   /* contains norm of vectors */
+    double c,s; /*cosine and sine of K.R */
+    double onebrcube; /* 1/r^3 */
     
     
-    // description of the magnetic structure.
-    // data provided in cartesian coordinates
+    /* description of the magnetic structure. */
+    /* data provided in cartesian coordinates */
     struct vec3 sk  ;
     struct vec3 isk ;
     double  phi ;
@@ -93,16 +93,16 @@ void  SimpleSum(const double *in_positions,
     double BLorz=0.0;
 #endif    
     
-    unsigned int a;     // counter for atoms
+    unsigned int a;     /* counter for atoms */
 	struct vec3 BCont;
-	int NofM = 0; // Number of moments considered
+	int NofM = 0; /* Number of moments considered */
 	double SumOfWeights = 0;
     
     
     
     
     
-    // define dupercell size
+    /* define dupercell size */
     scx = in_supercell[0];
     scy = in_supercell[1];
     scz = in_supercell[2];
@@ -126,7 +126,7 @@ void  SimpleSum(const double *in_positions,
     for (i=0;i<3;i++)
         printf("Cell is: %i %e %e %e\n",i,in_cell[i*3],in_cell[i*3+1],in_cell[i*3+2]);
         
-    //printf("a %e %e %e\n", sc_lat.a.x, sc_lat.a.y, sc_lat.a.z);
+    /*printf("a %e %e %e\n", sc_lat.a.x, sc_lat.a.y, sc_lat.a.z); */
 #endif     
     
     K.x = in_K[0];
@@ -143,7 +143,7 @@ void  SimpleSum(const double *in_positions,
                         sc_lat);
     
     
-    // muon position in reduced coordinates
+    /* muon position in reduced coordinates */
     muonpos.x =  (in_muonpos[0] + (scx/2) ) / (double) scx;
     muonpos.y =  (in_muonpos[1] + (scy/2) ) / (double) scy;
     muonpos.z =  (in_muonpos[2] + (scz/2) ) / (double) scz;
@@ -163,14 +163,14 @@ void  SimpleSum(const double *in_positions,
     for (a = 0; a < in_natoms; ++a)
     {
                     
-        // atom position in reduced coordinates
+        /* atom position in reduced coordinates */
         atmpos.x =  in_positions[3*a] ;
         atmpos.y =  in_positions[3*a+1] ;
         atmpos.z =  in_positions[3*a+2] ;
         
         printf("Atom pos (crys): %e %e %e\n",atmpos.x,atmpos.y,atmpos.z);
         
-        // go to cartesian coordinates (in Angstrom!)
+        /* go to cartesian coordinates (in Angstrom!) */
         atmpos = mat3_vmul(atmpos,sc_lat);  
         
         printf("Atom pos (cart): %e %e %e\n",atmpos.x,atmpos.y,atmpos.z);
@@ -190,7 +190,7 @@ void  SimpleSum(const double *in_positions,
     BLor = vec3_zero();
     pile_init(&MCont, nnn_for_cont);
     
-#pragma omp parallel shared(MCont) // remember data race!
+#pragma omp parallel shared(MCont) /* remember data race! */
 {    
 #pragma omp for collapse(3) schedule(guided,20)  private(i,j,k,a,r,n,atmpos,sk,isk,phi,R,c,s,m,u,onebrcube) reduction(+:Bx,By,Bz,BLorx,BLory,BLorz)
     for (i = 0; i < scx; ++i)
@@ -199,29 +199,29 @@ void  SimpleSum(const double *in_positions,
         {
             for (k = 0; k < scz; ++k)
             {
-                // loop over atoms
+                /* loop over atoms */
                 for (a = 0; a < in_natoms; ++a)
                 {
                     
-                    // atom position in reduced coordinates
+                    /* atom position in reduced coordinates */
                     atmpos.x = ( in_positions[3*a] + (double) i) / (double) scx;
                     atmpos.y = ( in_positions[3*a+1] + (double) j) / (double) scy;
                     atmpos.z = ( in_positions[3*a+2] + (double) k) / (double) scz;
                     
 
                     
-                    // go to cartesian coordinates (in Angstrom!)
+                    /* go to cartesian coordinates (in Angstrom!) */
                     atmpos = mat3_vmul(atmpos,sc_lat);
                     
-                    //printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z);
-                    // difference between atom pos and muon pos (cart coordinates)
+                    /*printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z); */
+                    /* difference between atom pos and muon pos (cart coordinates) */
                     
                     r = vec3_sub(atmpos,muonpos);
                     
                     n = vec3_norm(r);
                     if (n < radius)
                     {
-                        // calculate magnetic moment
+                        /* calculate magnetic moment */
 #ifdef _ALTERNATE_FC_INPUT
                         printf("ERROR!!! If you see this in the Python extension something went wrong!\n");
                          sk.x = in_fc[6*a];   sk.y = in_fc[6*a+1]; sk.z = in_fc[6*a+2];
@@ -232,8 +232,8 @@ void  SimpleSum(const double *in_positions,
 #endif                        
 
                           phi = in_phi[a];
-                        //printf("sk = %e %e %e\n", sk.x, sk.y, sk.z);
-                        //printf("isk = %e %e %e\n", isk.x, isk.y, isk.z);
+                        /*printf("sk = %e %e %e\n", sk.x, sk.y, sk.z); */
+                        /*printf("isk = %e %e %e\n", isk.x, isk.y, isk.z); */
                         
                         
                         R.x = (double) i; R.y = (double) j; R.z = (double) k; 
@@ -246,7 +246,7 @@ void  SimpleSum(const double *in_positions,
                         m = vec3_add ( vec3_muls(s, isk), m);
 						
 						
-						// calculate Lorentz Field
+						/* calculate Lorentz Field */
 #ifdef _OPENMP                        
                         BLorx += m.x; 
                         BLory += m.y;
@@ -255,11 +255,11 @@ void  SimpleSum(const double *in_positions,
                         BLor = vec3_add(BLor,m);
 #endif                           
                         
-                        // Calculate Contact Field
+                        /* Calculate Contact Field */
                         if (n < cont_radius) {
 #ifdef _DEBUG                      
 							printf("Adding moment to Cont: n: %e, m: %e %e %e! (Total: %d)\n", n, m.x,m.y,m.z,nnn_for_cont);
-#endif						// We add the moment multiplied by r^3 and then devide by Sum ^N r^3
+#endif						/* We add the moment multiplied by r^3 and then devide by Sum ^N r^3 */
 #pragma omp critical
 {
                                 pile_add_element(&MCont, pow(n,CONT_SCALING_POWER), vec3_muls(1./pow(n,CONT_SCALING_POWER),m));
@@ -267,17 +267,17 @@ void  SimpleSum(const double *in_positions,
 						}
                         
                         
-                        //printf("I sum: r = %e, p = %e %e %e\n",n, r.x, r.y, r.z);
-                        //printf("I sum: m = %e %e %e\n", m.x, m.y, m.z);
-                        // sum it
-                        // B += (( 3.0 * np.dot(nm,atom[1]) * atom[1] - nm ) / atom[0]**3)*0.9274009
+                        /* printf("I sum: r = %e, p = %e %e %e\n",n, r.x, r.y, r.z); 
+                         * printf("I sum: m = %e %e %e\n", m.x, m.y, m.z);
+                         * sum it */
+                        /* B += (( 3.0 * np.dot(nm,atom[1]) * atom[1] - nm ) / atom[0]**3)*0.9274009 */
                         
-                        // unit vector
+                        /* unit vector */
                         u = vec3_muls(1.0/n,r);
                         onebrcube = 1.0/pow(n,3);
                         
 #ifdef _OPENMP                        
-                        // m is used as dummy variable for the sum!
+                        /* m is used as dummy variable for the sum! */
                         m = vec3_muls( onebrcube ,vec3_sub(vec3_muls(3.0*vec3_dot(m,u),u), m));
                         Bx += m.x; 
                         By += m.y;
@@ -308,51 +308,53 @@ void  SimpleSum(const double *in_positions,
     B.x = Bx;B.y = By;B.z = Bz;
     BLor.x = BLorx;BLor.y = BLory;BLor.z = BLorz;
 #endif
-    //  1 bohr_magneton/(1angstrom^3) = 9274009.5(amperes ∕ meter)
-    //   mu_0 = 0.0000012566371((meter tesla) ∕ ampere)
-    //   BLor = (mu_0/3)*M_Lor
-    //   Note that befor this line BLor is just the sum of the magnetic moments!
-    //      magnetic_constant * 1 bohr_magneton = 11.654064 T⋅Å^3
+    /*  1 bohr_magneton/(1angstrom^3) = 9274009.5(amperes ∕ meter)
+     *   mu_0 = 0.0000012566371((meter tesla) ∕ ampere)
+     *   BLor = (mu_0/3)*M_Lor
+     *   Note that befor this line BLor is just the sum of the magnetic moments!
+     *      magnetic_constant * 1 bohr_magneton = 11.654064 T⋅Å^3
+     */
     
     BLor = vec3_muls(0.33333333333*11.654064, vec3_muls(3./(4.*M_PI*pow(radius,3)),BLor));
-    //printf("The Lorents field contribution is: %e %e %e Tesla!!\n",BLor.x,BLor.y,BLor.z);
+    /*printf("The Lorents field contribution is: %e %e %e Tesla!!\n",BLor.x,BLor.y,BLor.z); */
 
     out_field_lor[0] = BLor.x;
     out_field_lor[1] = BLor.y;
     out_field_lor[2] = BLor.z;
     
-    // Contact Field
+    /* Contact Field */
     BCont = vec3_zero();
-    NofM = 0; // Number of moments considered
+    NofM = 0; /* Number of moments considered */
     SumOfWeights = 0;
     for (i=0; i < nnn_for_cont; i++) {
 		if (MCont.ranks[i] > 0.0) {
 			BCont = vec3_add(BCont, MCont.elements[i]);
-			SumOfWeights += (1./MCont.ranks[i]); // Add the contribution weighted as norm^3 to the total
+			SumOfWeights += (1./MCont.ranks[i]); /* Add the contribution weighted as norm^3 to the total */
 			NofM++;
 		}
 	}
 	
 	pile_free(&MCont);
 	
-			// (2 magnetic_constant/3)⋅1bohr_magneton   = ((2 ⋅ magnetic_constant) ∕ 3) ⋅ (1 ⋅ bohr_magneton)
-			//   ≈ 7.769376E-27((g⋅m^3) ∕ (A⋅s^2))
-			//   ≈ 7.769376 T⋅Å^3
+    /* (2 magnetic_constant/3)⋅1bohr_magneton   = ((2 ⋅ magnetic_constant) ∕ 3) ⋅ (1 ⋅ bohr_magneton)
+     *   ≈ 7.769376E-27((g⋅m^3) ∕ (A⋅s^2))
+     *   ≈ 7.769376 T⋅Å^3
+     */
 	
 	if (NofM >0) {
 		BCont = vec3_muls((1./SumOfWeights) * 7.769376 , BCont);
-	} // otherwise is zero anyway!
+	} /* otherwise is zero anyway! */
     
     out_field_cont[0] = BCont.x;
     out_field_cont[1] = BCont.y;
     out_field_cont[2] = BCont.z;
     
     
-    // Dipolar Field
-			// mu_0/4pi = 0.1E-6(newton ∕ ampere^2) = 0.1E-6((meter tesla) ∕ ampere)
-    B = vec3_muls(0.92740098, B); // to tesla units
-    // Sum Lorentz field and Dipolar field
-    //B = vec3_add(B, BLor);
+    /* Dipolar Field */
+    /* mu_0/4pi = 0.1E-6(newton ∕ ampere^2) = 0.1E-6((meter tesla) ∕ ampere) */
+    B = vec3_muls(0.92740098, B); /* to tesla units */
+
+
     out_field_dip[0] = B.x;
     out_field_dip[1] = B.y;
     out_field_dip[2] = B.z;

@@ -11,7 +11,7 @@
 #include "Python.h"
 #include <numpy/arrayobject.h>
 
-// support numpy 1.6 - this macro got renamed and deprecated at once in 1.7
+/* support numpy 1.6 - this macro got renamed and deprecated at once in 1.7 */
 #ifndef NPY_ARRAY_IN_ARRAY
 #define NPY_ARRAY_IN_ARRAY NPY_IN_ARRAY
 #endif
@@ -139,7 +139,6 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   npy_intp * pShape=NULL; 
   npy_intp * fcShape=NULL; 
 
-  //npy_intp * phiSpahe = (npy_intp *) malloc(PyArray_NDIM(Phi) * sizeof(npy_intp));
   npy_intp * phiSpahe=NULL; 
 
   int i;
@@ -287,9 +286,10 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   fcndims = PyArray_NDIM(FC);
   pShape = PyArray_SHAPE(positions);
   fcShape = PyArray_SHAPE(FC);
-  // The first condition is impossible since it is implied by the 
-  //  PyArray_FROMANY function above. That function guaranties that the 
-  //  comparison of the shape is fine.
+  /* The first condition is impossible since it is implied by the 
+   *  PyArray_FROMANY function above. That function guaranties that the 
+   *  comparison of the shape is fine.
+   */ 
   
   if (pndims != fcndims || 
         pShape[0]!=fcShape[0] ||
@@ -301,7 +301,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     Py_DECREF(mu);
     Py_DECREF(supercell);
     Py_DECREF(cell);       
-    Py_XDECREF(rot_axis);   // Null in case it is optional
+    Py_XDECREF(rot_axis);   /* Null in case it is optional */
 	
     PyErr_SetString(PyExc_RuntimeError, "positions and FC arrays must have "
 		    "same shape.");
@@ -316,7 +316,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     Py_DECREF(mu);
     Py_DECREF(supercell);
     Py_DECREF(cell);       
-    Py_XDECREF(rot_axis);   // Null in case it is optional      
+    Py_XDECREF(rot_axis);   /* Null in case it is optional */
 	
 	PyErr_SetString(PyExc_RuntimeError, "positions and Phi arrays must have "
 		    "same shape[0].");
@@ -346,7 +346,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     Py_DECREF(mu);
     Py_DECREF(supercell);
     Py_DECREF(cell);       
-    Py_XDECREF(rot_axis);   // Null in case it is optional      
+    Py_XDECREF(rot_axis);   /* Null in case it is optional */
     if (in_positions != NULL){
         free(in_positions);
     }    
@@ -483,7 +483,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   cont = (double *) PyArray_DATA(ocont);
   lor = (double *) PyArray_DATA(olor);
   
-  // long computation starts here. No python object is touched so free thread execution
+  /* long computation starts here. No python object is touched so free thread execution */
   Py_BEGIN_ALLOW_THREADS
   switch (icalc_type)
   {
@@ -518,7 +518,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     free(in_supercell);
   if (in_cell != NULL)
     free(in_cell);          
-  if (in_axis != NULL)            // Null in case it is optional     
+  if (in_axis != NULL)            /* Null in case it is optional */
     free(in_axis);  
   Py_DECREF(positions);
   Py_DECREF(FC);
@@ -527,7 +527,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   Py_DECREF(mu);
   Py_DECREF(supercell);
   Py_DECREF(cell);
-  Py_XDECREF(rot_axis);   // Null in case it is optional      
+  Py_XDECREF(rot_axis);   /* Null in case it is optional */
 
   return Py_BuildValue("NNN", ocont, odip, olor);
 }
@@ -544,9 +544,9 @@ static PyObject * py_lfclib_dt(PyObject *self, PyObject *args) {
   
   int num_atoms=0;
   int * in_supercell;
-  npy_intp * pShape;// = PyArray_SHAPE(positions);
+  npy_intp * pShape, * out_dim;
   int nd = 2;
-  npy_intp * out_dim;// = (npy_intp *)malloc(2 * sizeof(npy_intp));
+
 
   /* put arguments into variables */ 
   if (!PyArg_ParseTuple(args, "OOOOd", 
@@ -617,7 +617,7 @@ static PyObject * py_lfclib_dt(PyObject *self, PyObject *args) {
     return NULL;
   }
   
-  // long computation starts here. No python object is touched so free thread execution
+  /* long computation starts here. No python object is touched so free thread execution */
   Py_BEGIN_ALLOW_THREADS  
   DipolarTensor( (double *) PyArray_DATA(positions),
       (double *) PyArray_DATA(mu),

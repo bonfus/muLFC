@@ -61,21 +61,21 @@ void RotataSum(const double *in_positions,
           double *out_field_cont, double *out_field_dip, double *out_field_lor)
 {
 
-    unsigned int scx, scy, scz = 10; //supercell sizes
-    unsigned int i,j,k; // counters for supercells
+    unsigned int scx, scy, scz = 10; /*supercell sizes */
+    unsigned int i,j,k; /* counters for supercells */
     
     struct vec3 atmpos;
     struct vec3 muonpos;
     struct vec3 r;
-    struct vec3 m;   //magnetic moment of atom
-    struct vec3 rm;   //rotated magnetic moment of atom
-    struct vec3 u;   // unit vector
+    struct vec3 m;   /*magnetic moment of atom */
+    struct vec3 rm;   /*rotated magnetic moment of atom */
+    struct vec3 u;   /* unit vector */
         
     struct mat3 sc_lat;
     
-    double n; // contains norm of vectors
-    double c,s; //cosine and sine of K.R
-    double onebrcube; // 1/r^3
+    double n; /* contains norm of vectors */
+    double c,s; /*cosine and sine of K.R */
+    double onebrcube; /* 1/r^3 */
     double angle;
     
     struct vec3 sk  ;
@@ -84,9 +84,9 @@ void RotataSum(const double *in_positions,
     
     struct vec3 R, K;
     
-    unsigned int a, angn;     // counter for atoms
+    unsigned int a, angn;     /* counter for atoms */
     
-    // for rotation
+    /* for rotation */
     struct vec3 axis;
     struct mat3 rmat;
 	struct vec3 * B = malloc(in_nangles * sizeof(struct vec3));
@@ -96,7 +96,7 @@ void RotataSum(const double *in_positions,
 	int NofM = 0;
 	double SumOfWeights = 0;
 
-    // defines axis
+    /* defines axis */
     axis.x = in_axis[0];
     axis.y = in_axis[1];
     axis.z = in_axis[2];
@@ -104,7 +104,7 @@ void RotataSum(const double *in_positions,
     
     
     
-    // define dupercell size
+    /* define dupercell size */
     scx = in_supercell[0];
     scy = in_supercell[1];
     scz = in_supercell[2];
@@ -144,7 +144,7 @@ void RotataSum(const double *in_positions,
                         sc_lat);
     
     
-    // muon position in reduced coordinates
+    /* muon position in reduced coordinates */
     muonpos.x =  (in_muonpos[0] + (scx/2) ) / (float) scx;
     muonpos.y =  (in_muonpos[1] + (scy/2) ) / (float) scy;
     muonpos.z =  (in_muonpos[2] + (scz/2) ) / (float) scz;
@@ -168,27 +168,27 @@ void RotataSum(const double *in_positions,
         {
             for (k = 0; k < scz; ++k)
             {
-                // loop over atoms
+                /* loop over atoms */
                 for (a = 0; a < in_natoms; ++a)
                 {
                     
-                    // atom position in reduced coordinates
+                    /* atom position in reduced coordinates */
                     atmpos.x = ( in_positions[3*a] + (float) i) / (float) scx;
                     atmpos.y = ( in_positions[3*a+1] + (float) j) / (float) scy;
                     atmpos.z = ( in_positions[3*a+2] + (float) k) / (float) scz;
                     
-                    // go to cartesian coordinates (in Angstrom!)
+                    /* go to cartesian coordinates (in Angstrom!) */
                     atmpos = mat3_vmul(atmpos,sc_lat);
                     
-                    //printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z);
-                    // difference between atom pos and muon pos (cart coordinates)
+                    /*printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z); */
+                    /* difference between atom pos and muon pos (cart coordinates) */
                     
                     r = vec3_sub(atmpos,muonpos);
                     
                     n = vec3_norm(r);
                     if (n < radius)
                     {
-                        // calculate magnetic moment
+                        /* calculate magnetic moment */
 #ifdef _ALTERNATE_FC_INPUT
                         printf("ERROR!!! If you see this in the Python extension something went wrong!\n");
                          sk.x = in_fc[6*a];   sk.y = in_fc[6*a+1]; sk.z = in_fc[6*a+2];
@@ -198,8 +198,8 @@ void RotataSum(const double *in_positions,
                         isk.x = in_fc[6*a+1];isk.y = in_fc[6*a+3];isk.z = in_fc[6*a+5];
 #endif
                           phi = in_phi[a];
-                        //printf("sk = %e %e %e\n", sk.x, sk.y, sk.z);
-                        //printf("isk = %e %e %e\n", isk.x, isk.y, isk.z);
+                        /*printf("sk = %e %e %e\n", sk.x, sk.y, sk.z); */
+                        /*printf("isk = %e %e %e\n", isk.x, isk.y, isk.z); */
                         
                         
                         R.x = (float) i; R.y = (float) j; R.z = (float) k; 
@@ -213,16 +213,16 @@ void RotataSum(const double *in_positions,
                         
                         
                         
-                        //printf("I sum: r = %e, p = %e %e %e\n",n, r.x, r.y, r.z);
-                        //printf("I sum: m = %e %e %e\n", m.x, m.y, m.z);
-                        // sum it
-                        // B += (( 3.0 * np.dot(nm,atom[1]) * atom[1] - nm ) / atom[0]**3)*0.9274009
+                        /*printf("I sum: r = %e, p = %e %e %e\n",n, r.x, r.y, r.z); */
+                        /*printf("I sum: m = %e %e %e\n", m.x, m.y, m.z); */
+                        /* sum it */
+                        /* B += (( 3.0 * np.dot(nm,atom[1]) * atom[1] - nm ) / atom[0]**3)*0.9274009 */
                         
-                        // unit vector
+                        /* unit vector */
                         u = vec3_muls(1.0/n,r);
                         onebrcube = 1.0/pow(n,3);
                         
-                        // do the rotation
+                        /* do the rotation */
                         for (angn = 0; angn < in_nangles; ++angn)
                         {
                             angle = 2*M_PI*((float) angn/ (float) in_nangles);
@@ -234,7 +234,7 @@ void RotataSum(const double *in_positions,
                             printf("Rotation matrix is: %e %e %e\n",rmat.c.x,rmat.c.y,rmat.c.z);
 #endif
 
-                            // rotate moment
+                            /* rotate moment */
                             rm = mat3_mulv(rmat, m);
                             
                             BLor[angn] = vec3_add(BLor[angn],rm);
@@ -244,12 +244,12 @@ void RotataSum(const double *in_positions,
                                         vec3_muls( onebrcube ,vec3_sub(vec3_muls(3.0*vec3_dot(rm,u),u), rm))
                                     );
 
-							// Calculate Contact Field
+							/* Calculate Contact Field */
 							if (n < cont_radius) {
 #ifdef _DEBUG                      
 								printf("Adding moment to Cont: n: %e, m: %e %e %e! (Total: %d)\n", n, rm.x,rm.y,rm.z,nnn_for_cont);
 #endif							
-								pile_add_element(&MCont[angn], pow(n,CONT_SCALING_POWER), vec3_muls(1./pow(n,CONT_SCALING_POWER),rm));  // see ass.c for this line
+								pile_add_element(&MCont[angn], pow(n,CONT_SCALING_POWER), vec3_muls(1./pow(n,CONT_SCALING_POWER),rm));  /* see ass.c for this line */
 							}
                                     
                         }
@@ -265,13 +265,13 @@ void RotataSum(const double *in_positions,
         }
     }
     
-    // Lorentz Field (explanation of the numbers in ass.c)
+    /* Lorentz Field (explanation of the numbers in ass.c) */
     
 
     for (angn = 0; angn < in_nangles; ++angn)
     {
-		BLor[angn] = vec3_muls(0.33333333333*11.654064, vec3_muls(3./(4.*M_PI*pow(radius,3)),BLor[angn]));// to tesla units
-		//printf("The Lorents field contribution is: %e %e %e Tesla and it will NOT be added!!\n",BLor[angn].x,BLor[angn].y,BLor[angn].z);    
+		BLor[angn] = vec3_muls(0.33333333333*11.654064, vec3_muls(3./(4.*M_PI*pow(radius,3)),BLor[angn]));/* to tesla units */
+		/*printf("The Lorents field contribution is: %e %e %e Tesla and it will NOT be added!!\n",BLor[angn].x,BLor[angn].y,BLor[angn].z);     */
 
         out_field_lor[3*angn+0] = BLor[angn].x;
         out_field_lor[3*angn+1] = BLor[angn].y;
@@ -280,29 +280,29 @@ void RotataSum(const double *in_positions,
     free(BLor);    
     
     
-    // Dipolar Field
+    /* Dipolar Field */
     
     for (angn = 0; angn < in_nangles; ++angn)
     {
-        B[angn] = vec3_muls(0.9274009, B[angn]); // to tesla units
-        //B[angn] = vec3_add(B[angn], BLor);
+        B[angn] = vec3_muls(0.9274009, B[angn]); /* to tesla units */
+        /*B[angn] = vec3_add(B[angn], BLor); */
         out_field_dip[3*angn+0] = B[angn].x;
         out_field_dip[3*angn+1] = B[angn].y;
         out_field_dip[3*angn+2] = B[angn].z;
     }
     free(B);
     
-    // Contact Filed
+    /* Contact Filed */
     
-    // Contact Field
+    /* Contact Field */
     NofM = 0;
     SumOfWeights = 0;
     
     for (angn = 0; angn < in_nangles; ++angn)
     {
-		// (re) initialize
+		/* (re) initialize */
 		BCont = vec3_zero();
-		NofM = 0; // Number of moments considered
+		NofM = 0; /* Number of moments considered */
 		SumOfWeights = 0;
 		
 		for (i=0; i < nnn_for_cont; i++) {
@@ -318,7 +318,7 @@ void RotataSum(const double *in_positions,
 		
 		if (NofM >0) {
 			BCont = vec3_muls((1./SumOfWeights) * 7.769376 , BCont);
-		} // otherwise is zero anyway!
+		} /* otherwise is zero anyway! */
 		
 		out_field_cont[3*angn+0] = BCont.x;
 		out_field_cont[3*angn+1] = BCont.y;

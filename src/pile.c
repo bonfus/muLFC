@@ -75,8 +75,8 @@ void pile_add_element(pile * p, double rank, struct vec3 v)
 void pile_move_elements_from_position(pile * p, unsigned int pos)
 {
 	unsigned int i;
-	// the first -1 is for 0 indexing
-	// the second -1 is becouse if only the last element must be moved it is thrashed!
+	/* the first -1 is for 0 indexing */
+	/* the second -1 is becouse if only the last element must be moved it is thrashed! */
 	if (p->nElements < 2) {
 		return;
 	}

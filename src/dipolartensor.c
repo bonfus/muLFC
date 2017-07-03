@@ -47,8 +47,8 @@ void DipolarTensor(const double *in_positions,
           double *out_field) 
 {
 
-    unsigned int scx, scy, scz = 10; //supercell sizes
-    unsigned int i,j,k; // counters for supercells
+    unsigned int scx, scy, scz = 10; /*supercell sizes */
+    unsigned int i,j,k; /* counters for supercells */
     
     struct vec3 atmpos;
     struct vec3 muonpos;
@@ -58,8 +58,8 @@ void DipolarTensor(const double *in_positions,
     struct mat3 sc_lat;
     
     double n;
-    double onebrcube; // 1/r^3
-    double onebrfive; // 1/r^5
+    double onebrcube; /* 1/r^3 */
+    double onebrfive; /* 1/r^5 */
     
     
     struct mat3 A, D;
@@ -69,14 +69,14 @@ void DipolarTensor(const double *in_positions,
     double Bzx=0.0; double Bzy=0.0; double Bzz=0.0;
 #endif    
     
-    unsigned int atom;     // counter for atoms
+    unsigned int atom;     /* counter for atoms */
     
     
     
     
     
     
-    // define dupercell size
+    /* define dupercell size */
     scx = in_supercell[0];
     scy = in_supercell[1];
     scz = in_supercell[2];
@@ -100,7 +100,7 @@ void DipolarTensor(const double *in_positions,
     for (i=0;i<3;i++)
         printf("Cell is: %i %e %e %e\n",i,in_cell[i*3],in_cell[i*3+1],in_cell[i*3+2]);
         
-    //printf("a %e %e %e\n", sc_lat.a.x, sc_lat.a.y, sc_lat.a.z);
+    /*printf("a %e %e %e\n", sc_lat.a.x, sc_lat.a.y, sc_lat.a.z); */
 #endif     
 
     sc_lat = mat3_mul(
@@ -108,7 +108,7 @@ void DipolarTensor(const double *in_positions,
                         sc_lat);
     
     
-    // muon position in reduced coordinates
+    /* muon position in reduced coordinates */
     muonpos.x =  (in_muonpos[0] + (scx/2) ) / (float) scx;
     muonpos.y =  (in_muonpos[1] + (scy/2) ) / (float) scy;
     muonpos.z =  (in_muonpos[2] + (scz/2) ) / (float) scz;
@@ -128,14 +128,14 @@ void DipolarTensor(const double *in_positions,
     for (atom = 0; atom < in_natoms; ++atom)
     {
                     
-        // atom position in reduced coordinates
+        /* atom position in reduced coordinates */
         atmpos.x =  in_positions[3*atom] ;
         atmpos.y =  in_positions[3*atom+1] ;
         atmpos.z =  in_positions[3*atom+2] ;
         
         printf("Atom pos (crys): %e %e %e\n",atmpos.x,atmpos.y,atmpos.z);
         
-        // go to cartesian coordinates (in Angstrom!)
+        /* go to cartesian coordinates (in Angstrom!) */
         atmpos = mat3_vmul(atmpos,sc_lat);  
         
         printf("Atom pos (cart): %e %e %e\n",atmpos.x,atmpos.y,atmpos.z);
@@ -156,22 +156,22 @@ D = mat3_zero();
         {
             for (k = 0; k < scz; ++k)
             {
-                // loop over atoms
+                /* loop over atoms */
                 for (atom = 0; atom < in_natoms; ++atom)
                 {
                     
-                    // atom position in reduced coordinates
+                    /* atom position in reduced coordinates */
                     atmpos.x = ( in_positions[3*atom] + (float) i) / (float) scx;
                     atmpos.y = ( in_positions[3*atom+1] + (float) j) / (float) scy;
                     atmpos.z = ( in_positions[3*atom+2] + (float) k) / (float) scz;
                     
 
                     
-                    // go to cartesian coordinates (in Angstrom!)
+                    /* go to cartesian coordinates (in Angstrom!) */
                     atmpos = mat3_vmul(atmpos,sc_lat);
                     
-                    //printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z);
-                    // difference between atom pos and muon pos (cart coordinates)
+                    /*printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z); */
+                    /* difference between atom pos and muon pos (cart coordinates) */
                     
                     r = vec3_sub(atmpos,muonpos);
                     
@@ -180,23 +180,23 @@ D = mat3_zero();
                     {
 
 
-                        // vector
+                        /* vector */
                         onebrcube = 1.0/pow(n,3);
                         onebrfive = 1.0/pow(n,5);
                         
                         
-                        // See uSR bible (Yaouanc Dalmas De Reotier, page 81)
-                        // alpha = x
+                        /* See uSR bible (Yaouanc Dalmas De Reotier, page 81) */
+                        /* alpha = x */
                         D.a.x = -onebrcube+3.0*r.x*r.x*onebrfive;
                         D.a.y = 3.0*r.x*r.y*onebrfive;
                         D.a.z = 3.0*r.x*r.z*onebrfive;
                         
-                        // alpha = y
+                        /* alpha = y */
                         D.b.x = D.a.y;
                         D.b.y = -onebrcube+3.0*r.y*r.y*onebrfive;
                         D.b.z = 3.0*r.y*r.z*onebrfive;
                         
-                        // alpha = z
+                        /* alpha = z */
                         D.c.x = D.a.z;
                         D.c.y = D.b.z;
                         D.c.z = -onebrcube+3.0*r.z*r.z*onebrfive;
@@ -223,7 +223,7 @@ D = mat3_zero();
     A.b.x = Byx; A.b.y = Byy; A.b.z = Byz;
     A.c.x = Bzx; A.c.y = Bzy; A.c.z = Bzz;
 #endif     
-    // B = vec3_muls(0.9274009, B); // we should multiply for a volume
+    /* B = vec3_muls(0.9274009, B); // we should multiply for a volume */
     out_field[0] = A.a.x; out_field[1] = A.a.y; out_field[2] = A.a.z;
     out_field[3] = A.b.x; out_field[4] = A.b.y; out_field[5] = A.b.z;
     out_field[6] = A.c.x; out_field[7] = A.c.y; out_field[8] = A.c.z;
