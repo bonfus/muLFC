@@ -5,7 +5,33 @@ import numpy as np
 
         
 class TestLFCWrappers(unittest.TestCase):
-    def test_one_over_r_cube(self):
+    def get_rec_space(self, cell):
+        a=cell[0,:]
+        b=cell[1,:]
+        c=cell[2,:]
+        ad = np.sqrt(sum(a**2))
+        bd = np.sqrt(sum(b**2))
+        cd = np.sqrt(sum(c**2))
+    
+        # Cell volume
+        V = np.dot(a, np.cross(b, c))
+    
+        # F takes components in the direct lattice to X
+        F = np.c_[a, b, c]
+    
+        # Reciprocal lattice vectors
+        astar = np.cross(b, c)/V
+        bstar = np.cross(c, a)/V
+        cstar = np.cross(a, b)/V
+    
+        # and parameters
+        ar = np.sqrt(sum(astar**2))
+        br = np.sqrt(sum(bstar**2))
+        cr = np.sqrt(sum(cstar**2))
+        
+        return np.array([astar, bstar, cstar])
+        
+    def est_one_over_r_cube(self):
         
         p  = np.array([[0.,0.,0.]])
         fc = np.array([[0.,0.,1.]],dtype=np.complex)
@@ -41,7 +67,7 @@ class TestLFCWrappers(unittest.TestCase):
         # ratios must be like 1/r^3
         np.testing.assert_array_almost_equal(res2.D, np.array([0,0,-0.92740095])*(1./(np.linalg.norm(mu2*2.))**3) )
     
-    def test_find_largest_sphere(self):
+    def est_find_largest_sphere(self):
         
         latpar = np.diag( [ 5. , 5. , 5.])
         sc = [10,10,10]
@@ -85,7 +111,82 @@ class TestLFCWrappers(unittest.TestCase):
         assert(r > 0.9)                   # Clearly it must also be close to 1.
         
     
-    def test_mnge(self):
+    def test_mnb2(self):
+        # same lattice with different definition of the unit cell
+        # same results should be obtained
+        hexlat = np.array([[3.00500000000   ,      0.0000000000     ,    0.0000000000 ],
+                           [-1.5025000572  ,       2.6024064375    ,     0.0000000000],
+                           [ 0.0000000000  ,       0.0000000000    ,     3.0380000000]])
+ 
+
+        p = ([[0.000000000   ,      0.000000000 ,        0.000000000],
+              [0.333333333   ,      0.666666667  ,      0.500000000],
+              [0.666666667   ,      0.333333333  ,      0.500000000]])
+                    
+        mu = np.array([0. , 0.0,  0.4])
+        #print(self.get_rec_space(latpar))
+        k = np.array([0.0,0.5,0.])        
+        phi = np.zeros(3)
+
+        fcs = np.array([[1.,1.,0.],
+                        [0.,0.,0.],
+                        [0.,0.,0.]], dtype=np.complex)
+                        
+        sc = [20, 20, 20]
+        r = find_largest_sphere(hexlat, [mu], sc)
+        
+        res2 = locfield(hexlat, p, fcs, k, phi, [mu], 's', sc, r, nnn=3, rcont = 10.0)[0]
+        
+        #lattice parameters in orthorombic setting
+        olat = np.array([[  3.00500000e+00,   0.00000000e+00,   0.00000000e+00],
+                           [  0.00000000e+00,   5.20481270e+00,    0.00000000e+00],
+                           [  0.00000000e+00,   0.00000000e+00,   3.03800000e+00]])
+
+        
+        # atomic positions
+        p = ([[ 0.      ,  0.      ,  0.      ],
+                   [ 0.5     ,  0.5     ,  0.      ],
+                   [ 0.      ,  0.333333333,  0.5     ],
+                   [ 0.      ,  0.666666667,  0.5     ],
+                   [ 0.5     ,  0.166666667,  0.5     ],
+                   [ 0.5     ,  0.833333333,  0.5     ]])
+                   
+        k_cart = np.dot(k, self.get_rec_space(hexlat))
+        k = np.dot(k_cart, np.linalg.inv(self.get_rec_space(olat).T))
+        print(k)
+        # phase
+        phi = np.zeros(6)
+
+        fcs = np.array([[1.,1.,0.],
+                        [-1.,-1.,0.],
+                        [0.,0.,0.],
+                        [0.,0.,0.],
+                        [0.,0.,0.],
+                        [0.,0.,0.]], dtype=np.complex)
+                        
+        
+        
+        sc = [20, 11, 20]
+        
+        r2 = find_largest_sphere(olat, [mu], sc)
+        if (r2 < r):
+            print("Invalid SC size!")
+        res = locfield(olat, p, fcs, k, phi, [mu], 's', sc, r, nnn=3, rcont = 10.0)[0]
+        
+        
+        
+        #print(self.get_rec_space(latpar))
+        #print(k_cart)
+        res.ACont=0.01
+        res2.ACont=0.01
+        
+        np.testing.assert_almost_equal(res.C, res2.C)
+        np.testing.assert_almost_equal(res.L, res2.L)
+        np.testing.assert_almost_equal(res.D, res2.D)
+        
+
+
+    def est_mnge(self):
         # from MnGe.cif
         #1 Mn  Mn          0.13800    0.13800    0.13800    1.000    0.008    1a         1
         #2 Mn  Mn          0.36200    0.86200    0.63800    1.000    0.008    1a         1

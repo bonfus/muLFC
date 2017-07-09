@@ -65,14 +65,14 @@ void FastIncommSum(const double *in_positions,
     unsigned int scx, scy, scz = 10; //supercell sizes
     unsigned int i,j,k; // counters for supercells
     
-    struct vec3 atmpos;
-    struct vec3 muonpos;
-    
-    struct vec3 r;
-    struct vec3 u;   // unit vector
-    
-    struct mat3 sc_lat;
-    struct mat3 inv_sc_lat;
+    vec3 * atmpos;
+    vec3 * muonpos;
+
+    vec3 * r;
+    vec3 * u;   // unit vector
+
+    mat3 * sc_lat;
+    mat3 * inv_sc_lat;
     
     double n;
     double c,s; //cosine and sine of K.R
@@ -81,35 +81,42 @@ void FastIncommSum(const double *in_positions,
     double  phi ;
     
     // tmp value for speed and clearness
-    struct vec3 crysvec;
     
-    double stagmom[in_natoms];                    // this is m_0
-    struct vec3 refatmpos[in_natoms];             // reference atom used to produce C and S    
-    struct vec3 Ahelix[in_natoms], Bhelix[in_natoms]; // two unit vectors describing the helix in the m_0 (cos(phi).a +/- sin(phi).b)
-    struct vec3 SDip[in_natoms], CDip[in_natoms]; // sums of contribution providing cosine and sine prefactors
-    struct vec3 SLor[in_natoms], CLor[in_natoms]; // sums of contribution providing cosine and sine prefactors
+    double * stagmom;                    // this is m_0
+    vec3 ** refatmpos;             // reference atom used to produce C and S    
+    vec3 ** Ahelix, **Bhelix; // two unit vectors describing the helix in the m_0 (cos(phi).a +/- sin(phi).b)
+    vec3 ** SDip, ** CDip; // sums of contribution providing cosine and sine prefactors
+    vec3 ** SLor, **CLor; // sums of contribution providing cosine and sine prefactors
     
     pile CCont, SCont;
     
-    struct vec3 K;
+    vec3 * K;
     
 
     unsigned int a, angn;     // counter for atoms
 
     // initialize variables
-
+    vec3 * tmp = new_vec3_zero();
+    atmpos = new_vec3_zero();
+    r = new_vec3_zero();
     
     pile_init(&CCont, nnn_for_cont);
     pile_init(&SCont, nnn_for_cont);
-
+    
+    stagmom = malloc(in_natoms*sizeof(scalar));  refatmpos = malloc(in_natoms*sizeof(vec3*));
+    Ahelix = malloc(in_natoms*sizeof(vec3*));    Bhelix = malloc(in_natoms*sizeof(vec3*));
+    SDip = malloc(in_natoms*sizeof(vec3*));      CDip = malloc(in_natoms*sizeof(vec3*));
+    SLor = malloc(in_natoms*sizeof(vec3*));      CLor = malloc(in_natoms*sizeof(vec3*));
+    
+    
     for (a = 0; a < in_natoms; ++a)
     {
-        Ahelix[a] = vec3_zero();
-        Bhelix[a] = vec3_zero();
-        CDip[a] = vec3_zero();
-        SDip[a] = vec3_zero();
-        CLor[a] = vec3_zero();
-        SLor[a] = vec3_zero();
+        Ahelix[a] = new_vec3_zero();
+        Bhelix[a] = new_vec3_zero();
+        CDip[a]   = new_vec3_zero();
+        SDip[a]   = new_vec3_zero();
+        CLor[a]   = new_vec3_zero();
+        SLor[a]   = new_vec3_zero();
     }
     
     // define dupercell size
@@ -122,17 +129,12 @@ void FastIncommSum(const double *in_positions,
     printf("Size is: %i\n",size);
 #endif 
     
-    sc_lat.a.x = in_cell[0];
-    sc_lat.a.y = in_cell[1];
-    sc_lat.a.z = in_cell[2];
-    sc_lat.b.x = in_cell[3];
-    sc_lat.b.y = in_cell[4];
-    sc_lat.b.z = in_cell[5];
-    sc_lat.c.x = in_cell[6];
-    sc_lat.c.y = in_cell[7];
-    sc_lat.c.z = in_cell[8];
+    sc_lat = new_mat3(in_cell[0], in_cell[1], in_cell[2],
+                      in_cell[3], in_cell[4], in_cell[5],
+                      in_cell[6], in_cell[7], in_cell[8]);
 
-    inv_sc_lat = mat3_inv(sc_lat);
+    inv_sc_lat = new_mat3_zero();
+    mat3_inv(sc_lat, inv_sc_lat);
 
 #ifdef _DEBUG      
     for (i=0;i<3;i++)
@@ -167,53 +169,51 @@ void FastIncommSum(const double *in_positions,
 
 #endif     
     
-    K.x = in_K[0];
-    K.y = in_K[1];
-    K.z = in_K[2];
+    K = new_vec3( in_K[0], in_K[1], in_K[2]);
 
 #ifdef _DEBUG     
     printf("K is: %e %e %e \n",K.x,K.y,K.z);
     printf("Radius is: %e\n",radius);
 #endif
 
-    sc_lat = mat3_mul(
-                        mat3_diag((float) scx, (float) scy, (float) scz),
-                        sc_lat);
+    mat3* sctmp = new_mat3_diag((double) scx, (double) scy, (double) scz);
+    mat3_mul(sctmp,sc_lat, sc_lat);
+    mat3_free(sctmp);
     
     
     // muon position in reduced coordinates
-    muonpos.x =  (in_muonpos[0] + (scx/2) ) / (float) scx;
-    muonpos.y =  (in_muonpos[1] + (scy/2) ) / (float) scy;
-    muonpos.z =  (in_muonpos[2] + (scz/2) ) / (float) scz;
+    muonpos = new_vec3(    (in_muonpos[0] + (scx/2) ) / (double) scx,
+                        (in_muonpos[1] + (scy/2) ) / (double) scy,
+                        (in_muonpos[2] + (scz/2) ) / (double) scz);
     
     
 
 #ifdef _DEBUG
-    printf("Muon pos (frac): %e %e %e\n",muonpos.x,muonpos.y,muonpos.z);
+    printf("Muon pos (frac): %e %e %e\n",muonpos->x,muonpos->y,muonpos->z);
 #endif
 
-    muonpos = mat3_vmul(muonpos,sc_lat);
+    mat3_vmul(muonpos,sc_lat,muonpos);
 
 #ifdef _DEBUG
     printf("Muon pos (cart): %e %e %e\n",muonpos.x,muonpos.y,muonpos.z);
 #endif
 
 
-
+    
     for (a = 0; a < in_natoms; ++a)
     {
         // reference atom in reduced coordinates
         //   the first atom is chosen as reference
-        refatmpos[a].x =  (in_positions[3*a+0] + (scx/2) ) / (float) scx;
-        refatmpos[a].y =  (in_positions[3*a+1] + (scy/2) ) / (float) scy;
-        refatmpos[a].z =  (in_positions[3*a+2] + (scz/2) ) / (float) scz;
+        refatmpos[a] = new_vec3( (in_positions[3*a+0] + (scx/2) ) / (float) scx,
+                                 (in_positions[3*a+1] + (scy/2) ) / (float) scy,
+                                 (in_positions[3*a+2] + (scz/2) ) / (float) scz);
 
 
 #ifdef _DEBUG
         printf("Reference atom pos (frac): %e %e %e\n",refatmpos[a].x,refatmpos[a].y,refatmpos[a].z);
 #endif
 
-        refatmpos[a] = mat3_vmul(refatmpos[a],sc_lat);
+        mat3_vmul(refatmpos[a], sc_lat, refatmpos[a]);
 
 #ifdef _DEBUG
         printf("Reference atom pos (cart): %e %e %e\n",refatmpos[a].x,refatmpos[a].y,refatmpos[a].z);
@@ -222,38 +222,39 @@ void FastIncommSum(const double *in_positions,
         
         
         // now take care of magntism
-        struct vec3 tmp;
+        
 #ifdef _ALTERNATE_FC_INPUT
         printf("ERROR!!! If you see this in the Python extension something went wrong!\n");
-        tmp.x = in_fc[6*a]; 
-        tmp.y = in_fc[6*a+1]; 
-        tmp.z = in_fc[6*a+2];
+        vec3_set(tmp, in_fc[6*a],
+                      in_fc[6*a+1], 
+                      in_fc[6*a+2]);
 #else
-        tmp.x = in_fc[6*a]; 
-        tmp.y = in_fc[6*a+2]; 
-        tmp.z = in_fc[6*a+4];
+        vec3_set(tmp, in_fc[6*a],
+                      in_fc[6*a+2],
+                      in_fc[6*a+4]);
 #endif
         stagmom[a] = vec3_norm(tmp);
-        Ahelix[a] = vec3_muls(1.0/stagmom[a],tmp);
-
+        vec3_muls(1.0/stagmom[a], tmp);
+        vec3_cpy(Ahelix[a], tmp);
         
         // now B
 #ifdef _ALTERNATE_FC_INPUT
         printf("ERROR!!! If you see this in the Python extension something went wrong!\n");
-        tmp.x = in_fc[6*a+3]; 
-        tmp.y = in_fc[6*a+4]; 
-        tmp.z = in_fc[6*a+5];
+        vec3_set(tmp, in_fc[6*a+3],
+                      in_fc[6*a+4], 
+                      in_fc[6*a+5]);
 #else
-        tmp.x = in_fc[6*a+1]; 
-        tmp.y = in_fc[6*a+3]; 
-        tmp.z = in_fc[6*a+5];
+        vec3_set(tmp, in_fc[6*a+1], 
+                      in_fc[6*a+3], 
+                      in_fc[6*a+5]);
 #endif      
         // check if they are the same
         if (fabs(stagmom[a] - vec3_norm(tmp))>EPS)
         {
             printf("ERROR!!! Staggered moment is different in real and imag parts of atom %u\n Use another routine!\n",a);
         }
-        Bhelix[a] =  vec3_muls(1.0/vec3_norm(tmp),tmp);
+        vec3_muls(1.0/vec3_norm(tmp),tmp);
+        vec3_cpy(Bhelix[a], tmp);
         
         if (fabs(vec3_dot(Ahelix[a],Bhelix[a])) > EPS)
         {
@@ -272,6 +273,7 @@ void FastIncommSum(const double *in_positions,
         }
         
     }
+    
 
 // parallel execution starts here
 // the shared variables are listed just to remember about data races!
@@ -290,40 +292,49 @@ void FastIncommSum(const double *in_positions,
                 {
                     
                     // atom position in reduced coordinates
-                    atmpos.x = ( in_positions[3*a] + (float) i) / (float) scx;
-                    atmpos.y = ( in_positions[3*a+1] + (float) j) / (float) scy;
-                    atmpos.z = ( in_positions[3*a+2] + (float) k) / (float) scz;
+                    vec3_set(atmpos, ( in_positions[3*a] + (double) i) / (double) scx,
+                                     ( in_positions[3*a+1] + (double) j) / (double) scy,
+                                     ( in_positions[3*a+2] + (double) k) / (double) scz);
                     
                     
                     
                     // go to cartesian coordinates (in Angstrom!)
-                    atmpos = mat3_vmul(atmpos,sc_lat);
+                    mat3_vmul(atmpos, sc_lat, atmpos);
                     
-                    //printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z);
+                    //printf("atompos: %e %e %e\n", atmpos->x, atmpos->y, atmpos->z);
                     // difference between atom pos and muon pos (cart coordinates)
                     
-                    r = vec3_sub(atmpos,muonpos);
+                    vec3_cpy(r,atmpos);
+                    vec3_sub(r,muonpos); // should be the opposite, but -1 below    (*)
                     
                     n = vec3_norm(r);
                     if (n < radius)
                     {
 
                         phi = in_phi[a];
-                        
-                        // unit vector
-                        u = vec3_muls(1.0/n,r);
-                        onebrcube = 1.0/pow(n,3);
-                        
+
                         // go back to fractional (crystal) definition!
                         // !!!!! CHECK THIS DEFINITION !!!!
-                        crysvec = mat3_vmul(vec3_sub(vec3_sub(atmpos,muonpos),refatmpos[a]),inv_sc_lat);
+                        vec3_cpy(tmp,r);
+                        vec3_sub(tmp,refatmpos[a]);
+                        //vec3_muls(-1.,tmp);
+                        mat3_vmul(tmp,inv_sc_lat,tmp); // now in crystal coord
+                        //printf("crysvec : %e %e %e\n", tmp->x, tmp->y,tmp->z);
                         //
-                        c = cos ( 2.0*M_PI * (vec3_dot(K,crysvec) + phi ) );
-                        s = sin ( 2.0*M_PI * (vec3_dot(K,crysvec) + phi ) );
+                        c = cos ( 2.0*M_PI * (vec3_dot(K,tmp) + phi ) );
+                        s = sin ( 2.0*M_PI * (vec3_dot(K,tmp) + phi ) );
+
+                        // unit vector
+                        vec3_muls(-1.0/n,r);                                      // (*)
+                        u = r;
+                        onebrcube = 1.0/pow(n,3);
+                        
+
 #ifdef _DEBUG
-                        printf("crysvec : %e %e %e\n", crysvec.x, crysvec.y,crysvec.z);
-                        struct vec3 tmp = vec3_sub(atmpos,muonpos);
-                        printf("vec3_sub(atmpos,muonpos) : %e %e %e\n", tmp.x, tmp.y,tmp.z);
+                        printf("crysvec : %e %e %e\n", crysvec->x, crysvec->y,crysvec->z);
+                        vec3_cpy(tmp, atmpos);
+                        tmp = vec3_sub(tmp,muonpos);
+                        printf("vec3_sub(atmpos,muonpos) : %e %e %e\n", tmp->x, tmp->y,tmp->z);
                         tmp = vec3_sub(vec3_sub(atmpos,muonpos),refatmpos[a]);
                         printf("vec3_sub(vec3_sub(atmpos,muonpos),refatmpos[a]) : %e %e %e\n",  tmp.x, tmp.y,tmp.z);
                         
@@ -356,63 +367,94 @@ void FastIncommSum(const double *in_positions,
                         #pragma omp critical(dipolar)
                         {
                             // Dipolar
-                            CDip[a] = vec3_add(
-                                            CDip[a],
-                                            vec3_add(
-                                                vec3_muls( c * onebrcube ,vec3_sub(vec3_muls(3.0*vec3_dot(Ahelix[a],u),u), Ahelix[a])),
-                                                vec3_muls( s * onebrcube ,vec3_sub(vec3_muls(3.0*vec3_dot(Bhelix[a],u),u), Bhelix[a]))
-                                            )
-                                        );
+                            vec3_cpy(tmp, u);
+                            vec3_muls(3.0*vec3_dot(Ahelix[a],tmp),tmp);
+                            vec3_sub(tmp, Ahelix[a]);
+                            vec3_muls( c * onebrcube , tmp);
+                            vec3_add(CDip[a], tmp);
                             
-                            SDip[a] = vec3_add(
-                                            SDip[a],
-                                            vec3_sub(
-                                                vec3_muls( s * onebrcube ,vec3_sub(vec3_muls(3.0*vec3_dot(Ahelix[a],u),u), Ahelix[a])),
-                                                vec3_muls( c * onebrcube ,vec3_sub(vec3_muls(3.0*vec3_dot(Bhelix[a],u),u), Bhelix[a]))
-                                            )
-                                        );
+
+                            
+                            vec3_cpy(tmp, u);
+                            vec3_muls(3.0*vec3_dot(Bhelix[a],tmp),tmp);
+                            vec3_sub(tmp, Bhelix[a]);
+                            vec3_muls( s * onebrcube , tmp);
+                            vec3_add(CDip[a], tmp);
+                            
+                            //SDip[a] = vec3_add(
+                            //                SDip[a],
+                            //                vec3_sub(
+                            //                    vec3_muls( s * onebrcube ,vec3_sub(vec3_muls(3.0*vec3_dot(Ahelix[a],u),u), Ahelix[a])),
+                            //                    vec3_muls( c * onebrcube ,vec3_sub(vec3_muls(3.0*vec3_dot(Bhelix[a],u),u), Bhelix[a]))
+                            //                )
+                            //            );
+                            vec3_cpy(tmp, u);
+                            vec3_muls(3.0*vec3_dot(Ahelix[a],tmp),tmp);
+                            vec3_sub(tmp, Ahelix[a]);
+                            vec3_muls( s * onebrcube , tmp);
+                            vec3_add(SDip[a], tmp);
+                            
+                            
+                            vec3_cpy(tmp, u);
+                            vec3_muls(3.0*vec3_dot(Bhelix[a],tmp),tmp);
+                            vec3_sub(tmp, Bhelix[a]);
+                            vec3_muls( c * onebrcube , tmp);
+                            vec3_sub(SDip[a], tmp);
+                            
+                            
                         }
                         #pragma omp critical(lorentz)
                         {
                             // Lorentz
-                            CLor[a] = vec3_add(
-                                            CLor[a],
-                                            vec3_add(
-                                                vec3_muls( c , Ahelix[a]),
-                                                vec3_muls( s , Bhelix[a])
-                                            )
-                                        );
-                            SLor[a] = vec3_add(
-                                            SLor[a],
-                                            vec3_sub(
-                                                vec3_muls( s ,Ahelix[a]),
-                                                vec3_muls( c ,Bhelix[a])
-                                            )
-                                        );
+                            //CLor[a] = vec3_add(
+                            //                CLor[a],
+                            //                vec3_add(
+                            //                    vec3_muls( c , Ahelix[a]),
+                            //                    vec3_muls( s , Bhelix[a])
+                            //                )
+                            //            );
+                            vec3_daxpy(c, Ahelix[a], CLor[a]);
+                            vec3_daxpy(s, Bhelix[a], CLor[a]);
+
+                            
+                            //SLor[a] = vec3_add(
+                            //                SLor[a],
+                            //                vec3_sub(
+                            //                    vec3_muls( s ,Ahelix[a]),
+                            //                    vec3_muls( c ,Bhelix[a])
+                            //                )
+                            //            );
+                            vec3_daxpy(s, Ahelix[a], SLor[a]);
+                            vec3_daxpy(-1.* c, Bhelix[a], SLor[a]);
                         }
 						// Contact
 						if (n < cont_radius) {
                             #pragma omp critical(contact)
                             {
-                                pile_add_element(&CCont, pow(n,CONT_SCALING_POWER), 
-							  								vec3_add(
-							  									vec3_muls( stagmom[a] * c , Ahelix[a]),
-							  									vec3_muls( stagmom[a] * s , Bhelix[a])
-							  								)							
-                                                );
-                                pile_add_element(&SCont, pow(n,CONT_SCALING_POWER), 
-							  								vec3_sub(
-							  									vec3_muls( stagmom[a]* s , Ahelix[a]),
-							  									vec3_muls( stagmom[a]* c , Bhelix[a])
-							  								)
-                                                );
-						    }
+                                //vec3_cpy(tmp, Ahelix[a]);
+                                vec3_set(tmp, 0.,0.,0.);
+                                //vec3_muls( stagmom[a] * c , tmp);
+                                
+                                vec3_daxpy( stagmom[a] * c , Ahelix[a], tmp);
+                                vec3_daxpy( stagmom[a] * s , Bhelix[a], tmp);
+                                //printf("CCont %d to be added : %e %e %e\n", a, tmp->x, tmp->y, tmp->z);
+                                pile_add_element(&CCont, pow(n,CONT_SCALING_POWER), tmp);
+                                
+                                
+                                //vec3_cpy(tmp, Ahelix[a]);
+                                vec3_set(tmp, 0.,0.,0.);
+                                //vec3_muls( stagmom[a] * s , tmp);
+                                vec3_daxpy( stagmom[a] * s , Ahelix[a], tmp);
+                                vec3_daxpy( -1.*stagmom[a] * c , Bhelix[a], tmp);
+                                //printf("SCont %d to be added : %e %e %e\n", a, tmp->x, tmp->y, tmp->z);
+                                pile_add_element(&SCont, pow(n,CONT_SCALING_POWER), tmp);
+                            }
                         }
 #ifdef _DEBUG                      
-                        printf("CDip %d is now : %e %e %e\n", a, CDip[a].x, CDip[a].y, CDip[a].z);
-                        printf("SDip %d is now : %e %e %e\n", a, SDip[a].x, SDip[a].y, SDip[a].z);
+                        printf("CDip %d is now : %e %e %e\n", a, CDip[a]->x, CDip[a]->y, CDip[a]->z);
+                        printf("SDip %d is now : %e %e %e\n", a, SDip[a]->x, SDip[a]->y, SDip[a]->z);
 #endif
-                    }                    
+                    }
                 }
             }
         }
@@ -420,13 +462,13 @@ void FastIncommSum(const double *in_positions,
 }
     
     double angle=0;
-    struct vec3 BDip;
-    struct vec3 BLor;
-    struct vec3 BCont;
+    vec3 * BDip;
+    vec3 * BLor;
+    vec3 * BCont;
 
     // for contact field evaluation
-    struct vec3 CBCont = vec3_zero();
-    struct vec3 SBCont = vec3_zero();
+    vec3 * CBCont; // = vec3_zero();
+    vec3 * SBCont; // = vec3_zero();
     int NofM = 0; // Number of moments considered
     double SumOfWeights = 0;    
     
@@ -435,54 +477,67 @@ void FastIncommSum(const double *in_positions,
     // first portion, dipolar fields and Lorentz
     #pragma omp section
     {
+        BDip = new_vec3_zero();
+        BLor = new_vec3_zero();
         for (angn = 0; angn < in_nangles; ++angn)
         {
             angle = 2*M_PI*((float) angn / (float) in_nangles);
             
             //  === Dipolar Field ===
-            BDip = vec3_zero();
+            vec3_set(BDip, 0., 0., 0.);
             // loop over atoms
             for (a = 0; a < in_natoms; ++a)
             {
-                BDip =  vec3_add(BDip,
-                                vec3_muls(
-                                    stagmom[a],
-                                    vec3_sub(
-                                        vec3_muls(cos(angle) , CDip[a]),
-                                        vec3_muls(sin(angle) , SDip[a])
-                                    )
-                                )
-                            );
+                vec3_cpy(tmp, CDip[a]);
+                vec3_muls(cos(angle) , tmp);
+                
+                vec3_daxpy(-1.*sin(angle) , SDip[a], tmp);
+                vec3_daxpy(stagmom[a] , tmp, BDip);
+                
+                
+                //BDip =  vec3_add(BDip,
+                //                vec3_muls(
+                //                    stagmom[a],
+                //                    vec3_sub(
+                //                        vec3_muls(cos(angle) , CDip[a]),
+                //                        vec3_muls(sin(angle) , SDip[a])
+                //                    )
+                //                )
+                //            );
             }
             
-            BDip = vec3_muls(0.9274009, BDip); // to tesla units
-            out_field_dip[3*angn+0] = BDip.x;
-            out_field_dip[3*angn+1] = BDip.y;
-            out_field_dip[3*angn+2] = BDip.z;        
+            vec3_muls(0.9274009, BDip); // to tesla units
+            vec3_getp(BDip, &(out_field_dip[3*angn]));
             
             
             //  === Lorentz Field ===
-            BLor = vec3_zero();
+            vec3_set(BLor, 0., 0., 0.);
             // loop over atoms
             for (a = 0; a < in_natoms; ++a)
             {
-                BLor =  vec3_add(BLor,
-                                vec3_muls(
-                                    stagmom[a],
-                                    vec3_sub(
-                                        vec3_muls(cos(angle) , CLor[a]),
-                                        vec3_muls(sin(angle) , SLor[a])
-                                    )
-                                )
-                            );
+                //BLor =  vec3_add(BLor,
+                //                vec3_muls(
+                //                    stagmom[a],
+                //                    vec3_sub(
+                //                        vec3_muls(cos(angle) , CLor[a]),
+                //                        vec3_muls(sin(angle) , SLor[a])
+                //                    )
+                //                )
+                //            );
+                
+                vec3_cpy(tmp, CLor[a]);
+                vec3_muls(cos(angle), tmp);
+                vec3_daxpy(-1.0*sin(angle) , SLor[a], tmp);
+                vec3_daxpy(stagmom[a] , tmp, BLor);
+                
             }
             
-            BLor = vec3_muls(0.33333333333*11.654064, vec3_muls(3./(4.*M_PI*pow(radius,3)),BLor));
-            out_field_lor[3*angn+0] = BLor.x;
-            out_field_lor[3*angn+1] = BLor.y;
-            out_field_lor[3*angn+2] = BLor.z;        
+            vec3_muls(0.33333333333*11.654064*(3./(4.*M_PI*pow(radius,3))),BLor);
+            vec3_getp(BLor, &(out_field_lor[3*angn]));       
             
         }
+        vec3_free(BDip);
+        vec3_free(BLor);
     }
 
 
@@ -490,23 +545,22 @@ void FastIncommSum(const double *in_positions,
     #pragma omp section
     {
         //  === Contact Field ===
-        BCont = vec3_zero();
-        
+        BCont = new_vec3_zero();
+        CBCont = new_vec3_zero();
+        SBCont = new_vec3_zero();
         for (i=0; i < nnn_for_cont; i++) {
             if ((CCont.ranks[i] >= 0.0) && (fabs(CCont.ranks[i] - SCont.ranks[i])<EPS)) {
-                CBCont = vec3_add(CBCont, vec3_muls(1./CCont.ranks[i],
-                                                    CCont.elements[i])
-                                    );
-                SBCont = vec3_add(SBCont, vec3_muls(1./SCont.ranks[i],
-                                                    SCont.elements[i])
-                                    );
+                vec3_daxpy(1./CCont.ranks[i],CCont.elements[i], CBCont);
+                vec3_daxpy(1./SCont.ranks[i],SCont.elements[i], SBCont);
+                
                 SumOfWeights += 1./CCont.ranks[i];
                 NofM++;
             } else {
                 printf("Something VERY odd ! ranks 1: %e ranks 2: %e \n", CCont.ranks[i] , SCont.ranks[i] );
             }
         }
-            
+        //printf("CBCont is now : %e %e %e\n", CBCont->x, CBCont->y, CBCont->z);
+        //printf("SBCont is now : %e %e %e\n", SBCont->x, SBCont->y, SBCont->z);
         // (2 magnetic_constant/3)⋅1bohr_magneton   = ((2 ⋅ magnetic_constant) ∕ 3) ⋅ (1 ⋅ bohr_magneton)
         //   ≈ 7.769376E-27((g⋅m^3) ∕ (A⋅s^2))
         //   ≈ 7.769376 T⋅Å^3
@@ -514,27 +568,48 @@ void FastIncommSum(const double *in_positions,
         for (angn = 0; angn < in_nangles; ++angn) {
             
             angle = 2*M_PI*((float) angn / (float) in_nangles);
-            
+            vec3_set(BCont, 0., 0., 0.);
             if (NofM >0) {
-                BCont = vec3_muls((1./SumOfWeights) * 7.769376 , 
-                                    vec3_sub(
-                                        vec3_muls(cos(angle) , CBCont),
-                                        vec3_muls(sin(angle) , SBCont)
-                                    )
-                                );
+                vec3_daxpy(cos(angle) , CBCont, BCont);
+                vec3_daxpy(-1.*sin(angle) , SBCont, BCont);
+                vec3_muls((1./SumOfWeights) * 7.769376, BCont);
             } // otherwise is zero anyway!
-            
-            out_field_cont[3*angn+0] = BCont.x;
-            out_field_cont[3*angn+1] = BCont.y;
-            out_field_cont[3*angn+2] = BCont.z;        
+            //printf("BCont final : %e %e %e\n", BCont->x, BCont->y, BCont->z);
+            vec3_getp(BCont, &(out_field_cont[3*angn+0]));  
         }
+        vec3_free(BCont);
+        vec3_free(CBCont);
+        vec3_free(SBCont);
     }
 } // end of omp parallel sections
 
     // free stuff used for contact field
     pile_free(&CCont);
     pile_free(&SCont);
+    free(stagmom);
+    for (a = 0; a < in_natoms; ++a)
+    {
+        vec3_free(Ahelix[a]);
+        vec3_free(Bhelix[a]);
+        vec3_free(CDip[a]);
+        vec3_free(SDip[a]);
+        vec3_free(CLor[a]);
+        vec3_free(SLor[a]);
+    }
+    free(Ahelix);free(Bhelix);
+    free(CDip);free(SDip);
+    free(CLor);free(SLor);
+    
+    mat3_free(inv_sc_lat);
+    vec3_free(atmpos);
+    vec3_free(r);
 
+    vec3_free(K);
+    vec3_free(muonpos);
+    vec3_free(tmp);
+    
+    mat3_free(sc_lat);
+    
 }
 
 

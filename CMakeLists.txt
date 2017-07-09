@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.7)
 project (LFC)
 
 
-OPTION (USE_OpenMP "Use OpenMP" ON)
+OPTION (USE_OpenMP "Use OpenMP" OFF)
 IF(USE_OpenMP)
   FIND_PACKAGE(OpenMP)
   IF(OPENMP_FOUND)

@@ -277,7 +277,7 @@ class TestLFCExtension(unittest.TestCase):
         
         refc,refd,refl = lfclib.Fields('i', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,8)
         
-        # no use the equivalent order without phase
+        # now use the equivalent order without phase
         phi= np.array([0.,])
         
         c,d,l = lfclib.Fields('i', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,8)

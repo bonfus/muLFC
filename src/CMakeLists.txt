@@ -1,6 +1,15 @@
 # set source files
-set (sources simplesum.c fastincommsum.c pile.c rotatesum.c dipolartensor.c mat3.c vec3.c)
+set (sources simplesum.c pile.c mat3.c vec3.c)
 set (devel-headers simplesum.h fastincommsum.h rotatesum.h dipolartensor.h config.h)
+
+FIND_PACKAGE(GSL)
+if (GSL_FOUND)
+  add_definitions(-D__GSL)
+  SET(LIBS ${LIBS} ${GSL_LIBRARIES})
+  INCLUDE_DIRECTORIES(${INCLUDE_DIRS})
+else()
+  message("GSL not found, using suboptimal portable version.")
+endif()
 
 
 # library version
