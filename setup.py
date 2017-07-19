@@ -35,8 +35,8 @@ LINK_ARGS = {'msvc':[],'gcc':[],'unix':[]}
 
 for compiler, args in [
         ('msvc', ['/EHsc', '/DHUNSPELL_STATIC']),
-        ('gcc', ['-O3', '-g0', '-std=c99']),
-        ('unix', ['-O3', '-g0', '-std=c99'])]:
+        ('gcc', ['-O3', '-g0', '-std=c89']),
+        ('unix', ['-O3', '-g0', '-std=c89'])]:
     COMPILE_ARGS[compiler] += args
     
 

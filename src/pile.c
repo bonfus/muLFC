@@ -5,10 +5,10 @@
  * @brief  Pile of vec3
  *
  *
- * 
+ *
  *
  * This file defines a set of functions to deal with a pile struct.
- * A pile is a list of (fixed) n elements. Only the elements with 
+ * A pile is a list of (fixed) n elements. Only the elements with
  * the n highest ranks are kept. The addition of an element can result
  * in either the removal of another element with lower rank or in an
  * unaltered pile if all the elements in the pile have ranks higher than
@@ -20,16 +20,16 @@
 
 /**
  * This function initializes the pile introducing nElements zero vectors
- * and setting the rank to -1. Since ranks must be positive, all these 
+ * and setting the rank to -1. Since ranks must be positive, all these
  * elements will be replaced.
- * 
+ *
  */
 void pile_init(pile * p, unsigned int nElements)
 {
-	p->nElements = nElements;
-	p->ranks = malloc(nElements * sizeof(double));
-	p->elements = malloc(nElements * sizeof(vec3*));
-    
+    p->nElements = nElements;
+    p->ranks = malloc(nElements * sizeof(double));
+    p->elements = malloc(nElements * sizeof(vec3*));
+
     unsigned int i;
     for (i = 0; i < nElements; ++i)
     {
@@ -43,61 +43,61 @@ void pile_init(pile * p, unsigned int nElements)
  * to the pile p.
  * If yes shifts all elements with lower rank by one position, removes
  * the last one, and adds the vector.
- * 
+ *
  */
 void pile_add_element(pile * p, double rank, vec3 * v)
 {
-	unsigned int i;
-	for ( i = 0; i < p->nElements; i++)
-	{
-		if (p->ranks[i] == -1.0) {
-			p->ranks[i] = rank;
-			vec3_cpy(p->elements[i] , v);
-			break;
-		}
-		if (p->ranks[i] > rank) {
-			pile_move_elements_from_position(p, i);
-			p->ranks[i] = rank;
-			vec3_cpy(p->elements[i] , v);
-			break;
-		}
-	}
+    unsigned int i;
+    for ( i = 0; i < p->nElements; i++)
+    {
+        if (p->ranks[i] == -1.0) {
+            p->ranks[i] = rank;
+            vec3_cpy(p->elements[i], v);
+            break;
+        }
+        if (p->ranks[i] > rank) {
+            pile_move_elements_from_position(p, i);
+            p->ranks[i] = rank;
+            vec3_cpy(p->elements[i], v);
+            break;
+        }
+    }
 }
 
 /**
  * This function moves the element in position pos down by one position.
  * The implicit assumption is that the element at position pos will be
  * overwritten.
- * If nElements = 1 nothing should be done. Otherwise copy all the 
+ * If nElements = 1 nothing should be done. Otherwise copy all the
  * elements form nElements-2-i to nElements-1-i
  */
 void pile_move_elements_from_position(pile * p, unsigned int pos)
 {
-  unsigned int i;
-	// the first -1 is for 0 indexing
-	// the second -1 is becouse if only the last element must be moved it is thrashed!
-	if (p->nElements < 2) {
-		return;
-	}
-	for (i = (p->nElements-1) ; i-- > pos ;)
-	{
-		p->ranks[i+1] = p->ranks[i];
-		memcpy(p->elements[i+1] , p->elements[i], sizeof(vec3));
-	}
+    unsigned int i;
+    /* the first -1 is for 0 indexing */
+    /* the second -1 is becouse if only the last element must be moved it is thrashed! */
+    if (p->nElements < 2) {
+        return;
+    }
+    for (i = (p->nElements-1); i-- > pos; )
+    {
+        p->ranks[i+1] = p->ranks[i];
+        memcpy(p->elements[i+1], p->elements[i], sizeof(vec3));
+    }
 }
 
 
 /**
- * 
- * Cleanup allocated memory 
- * 
+ *
+ * Cleanup allocated memory
+ *
  */
 void pile_free(pile * p)
 {
-  unsigned int i;
-	free(p->ranks);
-  for (i=0; i<p->nElements; i++) {
-    vec3_free(p->elements[i]);
-  }
-  free(p->elements);
+    unsigned int i;
+    free(p->ranks);
+    for (i=0; i<p->nElements; i++) {
+        vec3_free(p->elements[i]);
+    }
+    free(p->elements);
 }
