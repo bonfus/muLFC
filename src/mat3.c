@@ -197,12 +197,12 @@ int mat3_inv(mat3 * i, mat3 * minv)
 
 #else
 
-mat3* mat3_zero(){
+mat3* new_mat3_zero(){
     mat3 * m = gsl_matrix_calloc(3, 3);
     gsl_matrix_set_zero (m);
     return m;
 }
-mat3 * mat3_diag(scalar a, scalar b, scalar c) {
+mat3 * new_mat3_diag(scalar a, scalar b, scalar c) {
     mat3 * m = gsl_matrix_calloc (3, 3);
     gsl_matrix_set_zero (m);
     gsl_matrix_set (m, 0, 0, a);
@@ -210,16 +210,42 @@ mat3 * mat3_diag(scalar a, scalar b, scalar c) {
     gsl_matrix_set (m, 2, 2, c);
     return m;
 }
-mat3 * mat3_identity() {
+mat3 * new_mat3_identity() {
     mat3 * m = gsl_matrix_calloc (3, 3);
     gsl_matrix_set_identity (m);
     return m;
 }
-#define mat3_free gsl_matrix_free
-#define mat3_add gsl_matrix_add
-#define mat3_mul(A,B,C) gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, A, B, 1.0, C)
-#define mat3_mulv(A,x,y) gsl_blas_dgemv (CblasNoTrans, 1.0, A, x, 1.0, y)
-#define mat3_vmul(A,x,y) gsl_blas_dgemv (CblasTrans, 1.0, A, x, 1.0, y)
+mat3 * new_mat3(scalar ax, scalar ay, scalar az,
+                scalar bx, scalar by, scalar bz,
+                scalar cx, scalar cy, scalar cz) {
+    mat3 * m = gsl_matrix_calloc (3, 3);
+    gsl_matrix_set_zero (m);
+    gsl_matrix_set (m, 0, 0, ax);
+    gsl_matrix_set (m, 0, 1, ay);
+    gsl_matrix_set (m, 0, 2, az);
+    gsl_matrix_set (m, 1, 0, bx);
+    gsl_matrix_set (m, 1, 1, by);
+    gsl_matrix_set (m, 1, 2, bz);
+    gsl_matrix_set (m, 2, 0, cx);
+    gsl_matrix_set (m, 2, 1, cy);
+    gsl_matrix_set (m, 2, 2, cz);
+    return m;
+}
+
+void mat3_set(mat3* m, scalar ax, scalar ay, scalar az,
+              scalar bx, scalar by, scalar bz,
+              scalar cx, scalar cy, scalar cz)
+{
+    gsl_matrix_set (m, 0, 0, ax);
+    gsl_matrix_set (m, 0, 1, ay);
+    gsl_matrix_set (m, 0, 2, az);
+    gsl_matrix_set (m, 1, 0, bx);
+    gsl_matrix_set (m, 1, 1, by);
+    gsl_matrix_set (m, 1, 2, bz);
+    gsl_matrix_set (m, 2, 0, cx);
+    gsl_matrix_set (m, 2, 1, cy);
+    gsl_matrix_set (m, 2, 2, cz);
+}
 
 int mat3_aangle(vec3 * v, scalar r, mat3 * m)
 {
@@ -243,10 +269,15 @@ int mat3_aangle(vec3 * v, scalar r, mat3 * m)
     return 0;
 }
 int mat3_inv(mat3 * m, mat3 * minv) {
-    gsl_permutation p;
+    gsl_permutation * p;
     int s;
-    gsl_linalg_LU_decomp (m, &p, &s);
-    return gsl_linalg_LU_invert (m, &p, minv);
+
+    p = gsl_permutation_alloc(3);
+    gsl_linalg_LU_decomp (m, p, &s);
+    
+    s = gsl_linalg_LU_invert (m, p, minv);
+    gsl_permutation_free(p);
+    return s;
 }
 
 void mat3_get(mat3* m, scalar * ax, scalar * ay, scalar * az,

@@ -116,7 +116,7 @@ int vec3_cross(vec3 * u, vec3 * v, vec3 * t)
 
 #else
 
-vec3 * _vec3(scalar x, scalar y, scalar z)
+vec3 * new_vec3(scalar x, scalar y, scalar z)
 {
 	vec3 * v;
   v = gsl_vector_alloc(3);
@@ -126,20 +126,13 @@ vec3 * _vec3(scalar x, scalar y, scalar z)
 	return v;
 }
 
-vec3 * vec3_zero() 
+vec3 * new_vec3_zero() 
 {
 	vec3 * v;
   v = gsl_vector_alloc(3);
   gsl_vector_set_zero(v);
 	return v;
 }
-
-#define vec3_add gsl_vector_add
-#define vec3_sub gsl_vector_sub
-#define vec3_mul gsl_vector_mul
-#define vec3_muls(X,Y) gsl_vector_scale(Y,X)
-#define vec3_norm gsl_blas_dnrm2
-#define vec3_daxpy gsl_blas_daxpy
 
 scalar vec3_dot (vec3 * x, vec3 * y) {
         scalar r;
@@ -175,6 +168,13 @@ void vec3_getp(vec3 * v, scalar * x)
 	*x = gsl_vector_get(v,0);
 	*(x+1) = gsl_vector_get(v,1);
 	*(x+2) = gsl_vector_get(v,2);
+}
+
+void vec3_set(vec3 * v, scalar x, scalar y, scalar z) 
+{
+	gsl_vector_set(v,0,x);
+	gsl_vector_set(v,1,y);
+	gsl_vector_set(v,2,z);
 }
 
 #endif

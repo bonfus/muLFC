@@ -19,8 +19,10 @@
 
 #ifdef _OPENMP
         #include <omp.h>
+#ifdef __GSL
+#error GSL and OPENMP not supported yet.
 #endif
-
+#endif
 /**
  * This function calculates the dipolar field for a muon site.
  *

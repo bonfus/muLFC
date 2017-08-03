@@ -12,4 +12,6 @@ IF(USE_OpenMP)
   ENDIF()
 ENDIF()
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 add_subdirectory (src)
