@@ -48,9 +48,10 @@ int mat3_vmul( vec3*,  mat3*, vec3*);
 
 #define mat3_free gsl_matrix_free
 #define mat3_add gsl_matrix_add
-#define mat3_mul(A,B,C) gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, A, B, 1.0, C)
-#define mat3_mulv(A,x,y) gsl_blas_dgemv (CblasNoTrans, 1.0, A, x, 1.0, y)
-#define mat3_vmul(x,A,y) gsl_blas_dgemv (CblasTrans, 1.0, A, x, 1.0, y)
+#define mat3_mul(A,B,C) gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, A, B, 0.0, C)
+#define mat3_mulv(A,x,y) gsl_blas_dgemv (CblasNoTrans, 1.0, (A), (x), 0.0, (y))
+#define mat3_vmul(x,A,y) gsl_blas_dgemv (CblasTrans, 1.0, (A), (x), 0.0, (y))
+#define mat3_cpy gsl_matrix_memcpy
 
 #endif
 

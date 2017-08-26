@@ -109,8 +109,7 @@ int vec3_cross(vec3 * u, vec3 * v, vec3 * t)
 	  t->x = u->y * v->z - u->z * v->y;
 	  t->y = u->z * v->x - u->x * v->z;
 	  t->z = u->x * v->y - u->y * v->x;
-	  
-          return 0;
+    return 0;
 }
 
 
@@ -155,6 +154,7 @@ int vec3_cross(vec3 *u, vec3 *v, vec3 *t)
         gsl_vector_set(t, 0, p1);
         gsl_vector_set(t, 1, p2);
         gsl_vector_set(t, 2, p3);
+        return 0;
 }
 
 void vec3_get(vec3 * v, scalar * x, scalar  * y, scalar * z) 

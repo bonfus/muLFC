@@ -12,6 +12,9 @@
 #include "mat3.h"
 #include "pile.h"
 #include "config.h"
+#ifdef _DEBACO
+#include "utility.h"
+#endif
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846
@@ -71,6 +74,8 @@ void  SimpleSum(const double *in_positions,
 
     mat3 * sc_lat;
     mat3 * sctmp;
+    mat3 * aux;
+    vec3 * auxv;
 
     double n;   /* contains norm of vectors */
     double c,s; /*cosine and sine of K.R */
@@ -110,13 +115,14 @@ void  SimpleSum(const double *in_positions,
     isk = new_vec3_zero();
 
     R = new_vec3_zero();
-
+    aux = new_mat3_zero();
+    auxv = new_vec3_zero();
     /* define dupercell size */
     scx = in_supercell[0];
     scy = in_supercell[1];
     scz = in_supercell[2];
 
-#ifdef _DEBUG
+#ifdef _DEBACO
     printf("I use: %i %i %i\n",scx, scy, scz);
     printf("Total atoms: %i\n",in_natoms);
 #endif
@@ -125,23 +131,25 @@ void  SimpleSum(const double *in_positions,
                       in_cell[3], in_cell[4], in_cell[5],
                       in_cell[6], in_cell[7], in_cell[8]);
 
-#ifdef _DEBUG
-    for (i=0; i<3; i++)
-        printf("Cell is: %i %e %e %e\n",i,in_cell[i*3],in_cell[i*3+1],in_cell[i*3+2]);
-
-    /*printf("a %e %e %e\n", sc_lat.a.x, sc_lat.a.y, sc_lat.a.z); */
+#ifdef _DEBACO
+    print_mat3("Cell is:",sc_lat);
 #endif
 
     K = new_vec3( in_K[0], in_K[1], in_K[2]);
 
-#ifdef _DEBUG
-    printf("K is: %e %e %e \n",K->x,K->y,K->z);
+#ifdef _DEBACO
+    print_vec3("K is:",K);
     printf("Radius is: %e\n",radius);
 #endif
 
     sctmp = new_mat3_diag((double) scx, (double) scy, (double) scz);
-    mat3_mul(sctmp,sc_lat, sc_lat);
+    mat3_mul(sctmp, sc_lat, aux);
     mat3_free(sctmp);
+    mat3_cpy(sc_lat, aux);
+
+#ifdef _DEBACO
+    print_mat3("Super Cell is:", aux);
+#endif
 
 
     /* muon position in reduced coordinates */
@@ -149,18 +157,20 @@ void  SimpleSum(const double *in_positions,
                            (in_muonpos[1] + (scy/2) ) / (double) scy,
                            (in_muonpos[2] + (scz/2) ) / (double) scz);
 
-#ifdef _DEBUG
-    printf("Muon pos (frac): %e %e %e\n",muonpos->x,muonpos->y,muonpos->z);
+#ifdef _DEBACO
+    print_vec3("Muon pos (frac):",muonpos);
 #endif
 
-    mat3_vmul(muonpos,sc_lat,muonpos);
+    /* mat3_vmul(muonpos,sc_lat,muonpos); */
+    gsl_blas_dgemv (CblasTrans, 1.0, sc_lat, muonpos, 0.0, auxv);
+    vec3_cpy(muonpos, auxv);
 
-#ifdef _DEBUG
-    printf("Muon pos (cart): %e %e %e\n",muonpos->x,muonpos->y,muonpos->z);
+#ifdef _DEBACO
+    print_vec3("Muon pos (cart):",muonpos);
 #endif
 
 
-#ifdef _DEBUG
+#ifdef __DEBACO
     for (a = 0; a < in_natoms; ++a)
     {
 
@@ -169,12 +179,12 @@ void  SimpleSum(const double *in_positions,
         /*atmpos.y =  in_positions[3*a+1] ; */
         /*atmpos.z =  in_positions[3*a+2] ; */
 
-        printf("Atom pos (crys): %e %e %e\n",atmpos->x,atmpos->y,atmpos->z);
+        print_vec3("Atom pos (crys):",atmpos);
 
         /* go to cartesian coordinates (in Angstrom!) */
         /*atmpos = mat3_vmul(atmpos,sc_lat); */
 
-        printf("Atom pos (cart): %e %e %e\n",atmpos->x,atmpos->y,atmpos->z);
+        print_vec3("Atom pos (cart):",atmpos);
 #ifdef _ALTERNATE_FC_INPUT
         printf("ERROR!!! If you see this the extension compilation went wrong!\n");
         printf("FC (real, imag): %e %e %e %e %e %e\n",in_fc[6*a],in_fc[6*a+1],in_fc[6*a+2],in_fc[6*a+3],in_fc[6*a+4],in_fc[6*a+5]);
@@ -209,19 +219,29 @@ void  SimpleSum(const double *in_positions,
                                  ( in_positions[3*a+1] + (double) j) / (double) scy,
                                  ( in_positions[3*a+2] + (double) k) / (double) scz);
 
-
+#ifdef _DEBACO
+                            print_vec3(" atmpos :", atmpos);
+#endif
 
                         /* go to cartesian coordinates (in Angstrom!) */
-                        mat3_vmul(atmpos, sc_lat, atmpos);
-
+                        mat3_vmul(atmpos, sc_lat, auxv);
+#ifdef _DEBACO
+                            print_vec3(" atmpos cart:", auxv);
+#endif
                         /*printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z); */
                         /* difference between atom pos and muon pos (cart coordinates) */
 
-                        vec3_sub(atmpos, muonpos); /* multiplied by -1 below!! */
-                        r = atmpos;
+                        vec3_sub(auxv, muonpos); /* multiplied by -1 below!! */
+                        r = auxv;
 
 
                         n = vec3_norm(r);
+#ifdef _DEBACO
+                            print_vec3(" muonpos is :", muonpos);
+                            print_vec3(" r is :", r);
+                            printf("norm is %e\n", n);
+#endif
+
                         if (n < radius)
                         {
                             /* calculate magnetic moment */
@@ -260,8 +280,10 @@ void  SimpleSum(const double *in_positions,
 
                             /* Calculate Contact Field */
                             if (n < cont_radius) {
-#ifdef _DEBUG
-                                printf("Adding moment to Cont: n: %e, m: %e %e %e! (Total: %d)\n", n, m->x,m->y,m->z,nnn_for_cont);
+#ifdef _DEBACO
+                                printf("Adding moment to Cont: n: %e", n);
+                                print_vec3(" m: ", m);
+                                printf("   total: %d\n", nnn_for_cont);
 #endif                                          /* We add the moment multiplied by r^3 and then devide by Sum ^N r^3 */
 #pragma omp critical
                                 {
@@ -293,8 +315,9 @@ void  SimpleSum(const double *in_positions,
                             vec3_sub(u, m);
                             vec3_daxpy(onebrcube, u, B);
 #endif
-#ifdef _DEBUG
-                            printf("B is now : %e %e %e %e\n", n, B->x, B->y, B->z);
+#ifdef _DEBACO
+                            printf("B is now : %e", n);
+                            print_vec3(" components : ", B);
 #endif
                         }
 
@@ -305,7 +328,7 @@ void  SimpleSum(const double *in_positions,
         }
     }
 
-#ifdef _DEBUG
+#ifdef _DEBACO
     printf("Done with iterations!\n");
 #endif
 
@@ -323,7 +346,7 @@ void  SimpleSum(const double *in_positions,
     vec3_muls(0.33333333333*11.654064, BLor);
     /*printf("The Lorents field contribution is: %e %e %e Tesla!!\n",BLor.x,BLor.y,BLor.z); */
 
-    vec3_get(BLor, &(out_field_lor[0]), &(out_field_lor[1]), &(out_field_lor[2]));
+    vec3_getp(BLor, out_field_lor);
 
     /* Contact Field */
     BCont = new_vec3_zero();
@@ -347,14 +370,14 @@ void  SimpleSum(const double *in_positions,
         vec3_muls((1./SumOfWeights) * 7.769376, BCont);
     }     /* otherwise is zero anyway! */
 
-    vec3_get(BCont, &(out_field_cont[0]), &(out_field_cont[1]), &(out_field_cont[2]));
+    vec3_getp(BCont, out_field_cont);
 
     /* Dipolar Field */
     /* mu_0/4pi = 0.1E-6(newton ∕ ampere^2) = 0.1E-6((meter tesla) ∕ ampere) */
     vec3_muls(0.92740098, B); /* to tesla units */
 
 
-    vec3_get(B, &(out_field_dip[0]), &(out_field_dip[1]), &(out_field_dip[2]));
+    vec3_getp(B, out_field_dip);
 
     /* now free everything */
     vec3_free(atmpos);
@@ -367,7 +390,9 @@ void  SimpleSum(const double *in_positions,
     vec3_free(B);
     vec3_free(BLor);
     vec3_free(BCont);
+    vec3_free(auxv);
     mat3_free(sc_lat);
+    mat3_free(aux);
 
 
 

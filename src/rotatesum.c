@@ -14,6 +14,9 @@
 #include "mat3.h"
 #include "pile.h"
 #include "config.h"
+#ifdef _DEBACO
+#include "utility.h"
+#endif
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846
@@ -90,6 +93,7 @@ void RotataSum(const double *in_positions,
     vec3 * axis;
     mat3 * rmat;
     mat3* sctmp;
+    mat3* aux;
 
 
     vec3 ** B;
@@ -103,11 +107,13 @@ void RotataSum(const double *in_positions,
     /* defines axis */
     axis = new_vec3(in_axis[0], in_axis[1],in_axis[2]);
     rmat = new_mat3_zero();
+    aux  = new_mat3_zero();
 
     atmpos = new_vec3_zero();   /*magnetic moment of atom */
     m = new_vec3_zero();   /*magnetic moment of atom */
     rm = new_vec3_zero();   /*magnetic moment of atom */
     u = new_vec3_zero();   /*magnetic moment of atom */
+    r = new_vec3_zero();   
 
     sk  = new_vec3_zero();
     isk = new_vec3_zero();
@@ -119,7 +125,7 @@ void RotataSum(const double *in_positions,
     scy = in_supercell[1];
     scz = in_supercell[2];
 
-#ifdef _DEBUG
+#ifdef _DEBACO
     printf("I use: %i %i %i\n",scx, scy, scz);
     printf("Total atoms: %i\n",in_natoms);
     printf("N Angles: %u\n",in_nangles);
@@ -129,21 +135,22 @@ void RotataSum(const double *in_positions,
                       in_cell[3], in_cell[4], in_cell[5],
                       in_cell[6], in_cell[7], in_cell[8]);
 
-#ifdef _DEBUG
+#ifdef _DEBACO
     for (i=0; i<9; i++)
         printf("Cell is: %i %e\n",i,in_cell[i]);
 #endif
 
     K = new_vec3( in_K[0], in_K[1], in_K[2]);
 
-#ifdef _DEBUG
-    printf("K is: %e %e %e \n",K->x,K->y,K->z);
+#ifdef _DEBACO
+    print_vec3("K is: ",K);
     printf("Radius is: %e\n",radius);
 #endif
 
     sctmp = new_mat3_diag((double) scx, (double) scy, (double) scz);
-    mat3_mul(sctmp,sc_lat, sc_lat);
+    mat3_mul(sctmp,sc_lat, aux);
     mat3_free(sctmp);
+    mat3_cpy(sc_lat, aux);
 
 
     /* muon position in reduced coordinates */
@@ -151,10 +158,11 @@ void RotataSum(const double *in_positions,
                            (in_muonpos[1] + (scy/2) ) / (double) scy,
                            (in_muonpos[2] + (scz/2) ) / (double) scz);
 
-    mat3_vmul(muonpos,sc_lat,muonpos);
+    mat3_vmul(muonpos,sc_lat,m); /* m used as aux here*/
+    vec3_cpy(muonpos, m);
 
-#ifdef _DEBUG
-    printf("Muon pos is: %e %e %e\n",muonpos->x,muonpos->y,muonpos->z);
+#ifdef _DEBACO
+    print_vec3("Muon pos is: ",muonpos);
 #endif
 
     B = malloc(in_nangles * sizeof(vec3*));
@@ -184,13 +192,13 @@ void RotataSum(const double *in_positions,
                              ( in_positions[3*a+2] + (double) k) / (double) scz);
 
                     /* go to cartesian coordinates (in Angstrom!) */
-                    mat3_vmul(atmpos, sc_lat, atmpos);
+                    mat3_vmul(atmpos, sc_lat, m); /* m holds atompos*/
 
                     /*printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z); */
                     /* difference between atom pos and muon pos (cart coordinates) */
 
-                    vec3_sub(atmpos, muonpos);
-                    r = atmpos;
+                    vec3_sub(m, muonpos);
+                    vec3_cpy(r, m);
 
                     n = vec3_norm(r);
                     if (n < radius)
@@ -239,17 +247,15 @@ void RotataSum(const double *in_positions,
                             angle = 2*M_PI*((float) angn/ (float) in_nangles);
                             mat3_aangle(axis, angle, rmat);
                             vec3_cpy(u,r);                                 /* (*) */
-#ifdef _DEBUG
-                            printf("Rotation matrix is: %e %e %e\n",rmat->a->x,rmat->a->y,rmat->a->z);
-                            printf("Rotation matrix is: %e %e %e\n",rmat->b->x,rmat->b->y,rmat->b->z);
-                            printf("Rotation matrix is: %e %e %e\n",rmat->c->x,rmat->c->y,rmat->c->z);
+#ifdef _DEBACO
+                            print_mat3("Rotation matrix is: ",rmat);
 #endif
 
                             /* rotate moment */
-                            vec3_cpy(rm, m);
-                            mat3_mulv(rmat, rm, rm);
-#ifdef _DEBUG
-                            printf("Rotated m: %e %e %e!\n", rm->x,rm->y,rm->z);
+                            mat3_mulv(rmat, m, rm);
+                            
+#ifdef _DEBACO
+                            print_vec3("Rotated m: ", rm);
 #endif
                             vec3_add(BLor[angn],rm);
 
@@ -258,14 +264,16 @@ void RotataSum(const double *in_positions,
                             vec3_sub(u, rm);
                             vec3_muls(onebrcube, u);
                             vec3_add(B[angn],u);
-#ifdef _DEBUG
-                            printf("Adding moment to B: n: %e, m: %e %e %e!\n", n, u->x,u->y,u->z);
+#ifdef _DEBACO
+                            printf("Adding moment to B: n: %e", n);
+                            print_vec3(" m: ", u);
 #endif
 
                             /* Calculate Contact Field */
                             if (n < cont_radius) {
-#ifdef _DEBUG
-                                printf("Adding moment to Cont: n: %e, m: %e %e %e! (Total: %d)\n", n, rm->x,rm->y,rm->z,nnn_for_cont);
+#ifdef _DEBACO
+                                printf("Adding moment to Cont: n: %e (Total: %d)", n, nnn_for_cont);
+                                print_vec3(" m: %e %e %e! \n", rm);
 #endif
                                 vec3_cpy(sk, rm); /* sk used as dummy variable */
                                 vec3_muls(1./pow(n,CONT_SCALING_POWER),sk);
@@ -273,9 +281,10 @@ void RotataSum(const double *in_positions,
                             }
 
                         }
-#ifdef _DEBUG
-                        for (angn = 0; angn < in_nangles; ++angn)
-                            printf("B %d is now : %e %e %e\n", angn, B[angn]->x, B[angn]->y, B[angn]->z);
+#ifdef _DEBACO
+                        for (angn = 0; angn < in_nangles; ++angn) {
+                            printf("B %d is now : ", angn); print_vec3(" ", B[angn]);
+                        }
 #endif
                     }
 
@@ -345,6 +354,7 @@ void RotataSum(const double *in_positions,
     vec3_free(atmpos);
     vec3_free(m);
     vec3_free(rm);
+    vec3_free(r);
     vec3_free(u);
     vec3_free(sk);
     vec3_free(isk);
@@ -354,6 +364,7 @@ void RotataSum(const double *in_positions,
     vec3_free(axis);
     mat3_free(rmat);
     mat3_free(sc_lat);
+    mat3_free(aux);
 }
 
 

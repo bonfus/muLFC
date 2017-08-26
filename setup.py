@@ -10,7 +10,8 @@ sources = ['simplesum.c', \
            'vec3.c', \
            'mat3.c', \
            'pile.c', \
-           'dipolartensor.c']
+           'dipolartensor.c',\
+           'utility.c']
 src_sources = []
 for s in sources:
     src_sources.append(

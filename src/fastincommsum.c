@@ -13,6 +13,9 @@
 #include "mat3.h"
 #include "pile.h"
 #include "config.h"
+#ifdef _DEBACO
+#include "utility.h"
+#endif
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846
@@ -92,12 +95,14 @@ void FastIncommSum(const double *in_positions,
 
     vec3 * K;
     vec3 * tmp;
+    mat3* aux;
     mat3* sctmp;
 
     unsigned int a, angn;     /* counter for atoms */
 
     /* initialize variables */
     tmp = new_vec3_zero();
+    aux = new_mat3_zero();
     atmpos = new_vec3_zero();
     r = new_vec3_zero();
 
@@ -125,9 +130,8 @@ void FastIncommSum(const double *in_positions,
     scy = in_supercell[1];
     scz = in_supercell[2];
 
-#ifdef _DEBUG
+#ifdef _DEBACO
     printf("I use: %i %i %i\n",scx, scy, scz);
-    printf("Size is: %i\n",size);
 #endif
 
     sc_lat = new_mat3(in_cell[0], in_cell[1], in_cell[2],
@@ -137,28 +141,27 @@ void FastIncommSum(const double *in_positions,
     inv_sc_lat = new_mat3_zero();
     mat3_inv(sc_lat, inv_sc_lat);
 
-#ifdef _DEBUG
+#ifdef _DEBACO
     for (i=0; i<3; i++)
         printf("Cell is: %i %e %e %e\n",i,in_cell[i*3],in_cell[i*3+1],in_cell[i*3+2]);
 
-    printf("Inverse cell is %e %e %e\n", inv_sc_lat.a.x, inv_sc_lat.a.y, inv_sc_lat.a.z);
-    printf("Inverse cell is %e %e %e\n", inv_sc_lat.b.x, inv_sc_lat.b.y, inv_sc_lat.b.z);
-    printf("Inverse cell is %e %e %e\n", inv_sc_lat.c.x, inv_sc_lat.c.y, inv_sc_lat.c.z);
+    print_mat3("Inverse cell is ", inv_sc_lat);
 
     for (a = 0; a < in_natoms; ++a)
     {
 
         /* atom position in reduced coordinates */
-        atmpos.x =  in_positions[3*a];
-        atmpos.y =  in_positions[3*a+1];
-        atmpos.z =  in_positions[3*a+2];
+        vec3_set(atmpos,
+                        in_positions[3*a],
+                        in_positions[3*a+1],
+                        in_positions[3*a+2]);
 
-        printf("Atom pos (crys): %e %e %e\n",atmpos.x,atmpos.y,atmpos.z);
+        print_vec3("Atom pos (crys): ",atmpos);
 
         /* go to cartesian coordinates (in Angstrom!) */
-        atmpos = mat3_vmul(atmpos,sc_lat);
+        mat3_vmul(atmpos,sc_lat, tmp);
 
-        printf("Atom pos (cart): %e %e %e\n",atmpos.x,atmpos.y,atmpos.z);
+        print_vec3("Atom pos (cart): ", tmp);
 #ifdef _ALTERNATE_FC_INPUT
         printf("FC (real, imag): %e %e %e %e %e %e\n",in_fc[6*a],in_fc[6*a+1],in_fc[6*a+2],in_fc[6*a+3],in_fc[6*a+4],in_fc[6*a+5]);
 #else
@@ -172,15 +175,14 @@ void FastIncommSum(const double *in_positions,
 
     K = new_vec3( in_K[0], in_K[1], in_K[2]);
 
-#ifdef _DEBUG
-    printf("K is: %e %e %e \n",K.x,K.y,K.z);
-    printf("Radius is: %e\n",radius);
+#ifdef _DEBACO
+    print_vec3("K is: ",K); printf("Radius is: %e\n",radius);
 #endif
 
     sctmp = new_mat3_diag((double) scx, (double) scy, (double) scz);
-    mat3_mul(sctmp,sc_lat, sc_lat);
+    mat3_mul(sctmp,sc_lat, aux);
     mat3_free(sctmp);
-
+    mat3_cpy(sc_lat, aux);
 
     /* muon position in reduced coordinates */
     muonpos = new_vec3(    (in_muonpos[0] + (scx/2) ) / (double) scx,
@@ -189,14 +191,15 @@ void FastIncommSum(const double *in_positions,
 
 
 
-#ifdef _DEBUG
-    printf("Muon pos (frac): %e %e %e\n",muonpos->x,muonpos->y,muonpos->z);
+#ifdef _DEBACO
+    print_vec3("Muon pos (frac): %e %e %e\n",muonpos);
 #endif
 
-    mat3_vmul(muonpos,sc_lat,muonpos);
-
-#ifdef _DEBUG
-    printf("Muon pos (cart): %e %e %e\n",muonpos.x,muonpos.y,muonpos.z);
+    mat3_vmul(muonpos,sc_lat,tmp);
+    vec3_cpy(muonpos, tmp);
+    
+#ifdef _DEBACO
+    print_vec3("Muon pos (cart): %e %e %e\n",muonpos);
 #endif
 
 
@@ -210,14 +213,14 @@ void FastIncommSum(const double *in_positions,
                                  (in_positions[3*a+2] + (scz/2) ) / (float) scz);
 
 
-#ifdef _DEBUG
-        printf("Reference atom pos (frac): %e %e %e\n",refatmpos[a].x,refatmpos[a].y,refatmpos[a].z);
+#ifdef _DEBACO
+        print_vec3("Reference atom pos (frac): ",refatmpos[a]);
 #endif
 
-        mat3_vmul(refatmpos[a], sc_lat, refatmpos[a]);
-
-#ifdef _DEBUG
-        printf("Reference atom pos (cart): %e %e %e\n",refatmpos[a].x,refatmpos[a].y,refatmpos[a].z);
+        mat3_vmul(refatmpos[a], sc_lat, tmp); 
+        vec3_cpy(refatmpos[a], tmp);
+#ifdef _DEBACO
+        print_vec3("Reference atom pos (cart): ",refatmpos[a]);
 #endif
 
 
@@ -262,9 +265,9 @@ void FastIncommSum(const double *in_positions,
             printf("ERROR!!! Real and imaginary part of atom %u are not orthogonal by %e!\n",a,vec3_dot(Ahelix[a],Bhelix[a]));
         }
 
-#ifdef _DEBUG
-        printf("Unit vector a (cart): %e %e %e\n",Ahelix[a].x,Ahelix[a].y,Ahelix[a].z);
-        printf("Unit vector b (cart): %e %e %e\n",Bhelix[a].x,Bhelix[a].y,Bhelix[a].z);
+#ifdef _DEBACO
+        print_vec3("Unit vector a (cart): ",Ahelix[a]);
+        print_vec3("Unit vector b (cart): ",Bhelix[a]);
         printf("Stag mom: %e\n", stagmom[a]);
 #endif
 
@@ -300,12 +303,12 @@ void FastIncommSum(const double *in_positions,
 
 
                         /* go to cartesian coordinates (in Angstrom!) */
-                        mat3_vmul(atmpos, sc_lat, atmpos);
+                        mat3_vmul(atmpos, sc_lat, tmp); /* atmpos is in tmp now
 
                         /*printf("atompos: %e %e %e\n", atmpos->x, atmpos->y, atmpos->z); */
                         /* difference between atom pos and muon pos (cart coordinates) */
 
-                        vec3_cpy(r,atmpos);
+                        vec3_cpy(r,tmp);
                         vec3_sub(r,muonpos); /* should be the opposite, but -1 below    (*) */
 
                         n = vec3_norm(r);
@@ -332,37 +335,37 @@ void FastIncommSum(const double *in_positions,
 
 
 #ifdef _DEBUG
-                            printf("crysvec : %e %e %e\n", crysvec->x, crysvec->y,crysvec->z);
-                            vec3_cpy(tmp, atmpos);
-                            tmp = vec3_sub(tmp,muonpos);
-                            printf("vec3_sub(atmpos,muonpos) : %e %e %e\n", tmp->x, tmp->y,tmp->z);
-                            tmp = vec3_sub(vec3_sub(atmpos,muonpos),refatmpos[a]);
-                            printf("vec3_sub(vec3_sub(atmpos,muonpos),refatmpos[a]) : %e %e %e\n",  tmp.x, tmp.y,tmp.z);
-
-                            printf("vec3_dot(K,vec3_sub(vec3_sub(atmpos,muonpos),refatmpos[a])) : %e \n",  vec3_dot(K,vec3_sub(vec3_sub(atmpos,muonpos),refatmpos[a])));
-
-
-                            printf("cos is this time : %e \n", c);
-                            printf("sin is this time : %e \n", s);
-
-
-                            printf("u is : %e %e %e\n", u.x, u.y, u.z);
-                            tmp = vec3_muls(onebrcube,vec3_sub(vec3_muls(3.0*vec3_dot(Ahelix[a],u),u), Ahelix[a]));
-                            printf("A part %d is : %e %e %e\n", a, tmp.x, tmp.y, tmp.z);
-                            tmp = vec3_muls(onebrcube,vec3_sub(vec3_muls(3.0*vec3_dot(Bhelix[a],u),u), Bhelix[a]));
-                            printf("B part %d is : %e %e %e\n", a, tmp.x, tmp.y, tmp.z);
-
-                            tmp = vec3_add (
-                                vec3_muls( c * onebrcube,vec3_sub(vec3_muls(3.0*vec3_dot(Ahelix[a],u),u), Ahelix[a])),
-                                vec3_muls( s * onebrcube,vec3_sub(vec3_muls(3.0*vec3_dot(Bhelix[a],u),u), Bhelix[a]))
-                                );
-
-                            printf("CDip %d to be added : %e %e %e\n", a, tmp.x, tmp.y, tmp.z);
-                            tmp =  vec3_sub(
-                                vec3_muls( s * onebrcube,vec3_sub(vec3_muls(3.0*vec3_dot(Ahelix[a],u),u), Ahelix[a])),
-                                vec3_muls( c * onebrcube,vec3_sub(vec3_muls(3.0*vec3_dot(Bhelix[a],u),u), Bhelix[a]))
-                                );
-                            printf("SDip %d to be added : %e %e %e\n", a, tmp.x, tmp.y, tmp.z);
+                            //printf("crysvec : %e %e %e\n", crysvec->x, crysvec->y,crysvec->z);
+                            //vec3_cpy(tmp, atmpos);
+                            //tmp = vec3_sub(tmp,muonpos);
+                            //printf("vec3_sub(atmpos,muonpos) : %e %e %e\n", tmp->x, tmp->y,tmp->z);
+                            //tmp = vec3_sub(vec3_sub(atmpos,muonpos),refatmpos[a]);
+                            //printf("vec3_sub(vec3_sub(atmpos,muonpos),refatmpos[a]) : %e %e %e\n",  tmp.x, tmp.y,tmp.z);
+                            //
+                            //printf("vec3_dot(K,vec3_sub(vec3_sub(atmpos,muonpos),refatmpos[a])) : %e \n",  vec3_dot(K,vec3_sub(vec3_sub(atmpos,muonpos),refatmpos[a])));
+                            //
+                            //
+                            //printf("cos is this time : %e \n", c);
+                            //printf("sin is this time : %e \n", s);
+                            //
+                            //
+                            //printf("u is : %e %e %e\n", u.x, u.y, u.z);
+                            //tmp = vec3_muls(onebrcube,vec3_sub(vec3_muls(3.0*vec3_dot(Ahelix[a],u),u), Ahelix[a]));
+                            //printf("A part %d is : %e %e %e\n", a, tmp.x, tmp.y, tmp.z);
+                            //tmp = vec3_muls(onebrcube,vec3_sub(vec3_muls(3.0*vec3_dot(Bhelix[a],u),u), Bhelix[a]));
+                            //printf("B part %d is : %e %e %e\n", a, tmp.x, tmp.y, tmp.z);
+                            //
+                            //tmp = vec3_add (
+                            //    vec3_muls( c * onebrcube,vec3_sub(vec3_muls(3.0*vec3_dot(Ahelix[a],u),u), Ahelix[a])),
+                            //    vec3_muls( s * onebrcube,vec3_sub(vec3_muls(3.0*vec3_dot(Bhelix[a],u),u), Bhelix[a]))
+                            //    );
+                            //
+                            //printf("CDip %d to be added : %e %e %e\n", a, tmp.x, tmp.y, tmp.z);
+                            //tmp =  vec3_sub(
+                            //    vec3_muls( s * onebrcube,vec3_sub(vec3_muls(3.0*vec3_dot(Ahelix[a],u),u), Ahelix[a])),
+                            //    vec3_muls( c * onebrcube,vec3_sub(vec3_muls(3.0*vec3_dot(Bhelix[a],u),u), Bhelix[a]))
+                            //    );
+                            //printf("SDip %d to be added : %e %e %e\n", a, tmp.x, tmp.y, tmp.z);
 #endif
                             /* sum all data */
                         #pragma omp critical(dipolar)
@@ -451,9 +454,9 @@ void FastIncommSum(const double *in_positions,
                                     pile_add_element(&SCont, pow(n,CONT_SCALING_POWER), tmp);
                                 }
                             }
-#ifdef _DEBUG
-                            printf("CDip %d is now : %e %e %e\n", a, CDip[a]->x, CDip[a]->y, CDip[a]->z);
-                            printf("SDip %d is now : %e %e %e\n", a, SDip[a]->x, SDip[a]->y, SDip[a]->z);
+#ifdef _DEBACO
+                            printf("CDip %d is now : ", a); print_vec3(" ", CDip[a]);
+                            printf("SDip %d is now : ", a); print_vec3(" ", SDip[a]);
 #endif
                         }
                     }
@@ -609,6 +612,7 @@ void FastIncommSum(const double *in_positions,
     vec3_free(muonpos);
     vec3_free(tmp);
 
+    mat3_free(aux);
     mat3_free(sc_lat);
 
 }

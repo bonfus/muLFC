@@ -1,5 +1,5 @@
 # set source files
-set (sources simplesum.c rotatesum.c fastincommsum.c dipolartensor.c pile.c mat3.c vec3.c)
+set (sources simplesum.c rotatesum.c fastincommsum.c dipolartensor.c pile.c mat3.c vec3.c utility.c)
 set (devel-headers simplesum.h fastincommsum.h rotatesum.h dipolartensor.h config.h)
 
 FIND_PACKAGE(GSL)
@@ -23,6 +23,7 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   # Update if necessary
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
 endif()
+
 
 # library version
 set(LFClib_VERSION_MAJOR 0)

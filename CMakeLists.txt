@@ -14,4 +14,6 @@ ENDIF()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -D_DEBACO")
+
 add_subdirectory (src)

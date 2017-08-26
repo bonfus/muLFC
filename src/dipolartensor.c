@@ -13,6 +13,9 @@
 #include <stdio.h>
 #include <math.h>
 #include "mat3.h"
+#ifdef _DEBACO
+#include "utility.h"
+#endif
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -53,9 +56,11 @@ void DipolarTensor(const double *in_positions,
     vec3 * atmpos;
     vec3 * muonpos;
     vec3 * r;
+    vec3 * tmp;
 
 
     mat3 * sc_lat;
+    mat3 * aux;
 
     double n, rx, ry, rz;
     double onebrcube; /* 1/r^3 */
@@ -73,7 +78,8 @@ void DipolarTensor(const double *in_positions,
 
 
 
-
+    aux = new_mat3_zero();
+    tmp = new_vec3_zero();
 
 
     /* define dupercell size */
@@ -81,7 +87,7 @@ void DipolarTensor(const double *in_positions,
     scy = in_supercell[1];
     scz = in_supercell[2];
 
-#ifdef _DEBUG
+#ifdef _DEBACO
     printf("I use: %i %i %i\n",scx, scy, scz);
     printf("Size is: %i\n",in_natoms);
 #endif
@@ -90,7 +96,7 @@ void DipolarTensor(const double *in_positions,
                       in_cell[3], in_cell[4], in_cell[5],
                       in_cell[6], in_cell[7], in_cell[8]);
 
-#ifdef _DEBUG
+#ifdef _DEBACO
     for (i=0; i<3; i++)
         printf("Cell is: %i %e %e %e\n",i,in_cell[i*3],in_cell[i*3+1],in_cell[i*3+2]);
 
@@ -98,8 +104,9 @@ void DipolarTensor(const double *in_positions,
 #endif
 
     mat3* sctmp = new_mat3_diag((scalar) scx, (scalar) scy, (scalar) scz);
-    mat3_mul(sctmp,sc_lat, sc_lat);
+    mat3_mul(sctmp,sc_lat, aux);
     mat3_free(sctmp);
+    mat3_cpy(sc_lat, aux);
 
 
     /* muon position in reduced coordinates */
@@ -107,38 +114,42 @@ void DipolarTensor(const double *in_positions,
                         (in_muonpos[1] + (scy/2) ) / (scalar) scy,
                         (in_muonpos[2] + (scz/2) ) / (scalar) scz);
 
-#ifdef _DEBUG
-    printf("Muon pos (frac): %e %e %e\n",muonpos.x,muonpos.y,muonpos.z);
+#ifdef _DEBACO
+    print_vec3("Muon pos (frac): ",muonpos);
 #endif
 
-    mat3_vmul(muonpos,sc_lat,muonpos);
+    mat3_vmul(muonpos,sc_lat,tmp);
+    vec3_cpy(muonpos, tmp);
 
-#ifdef _DEBUG
-    printf("Muon pos (cart): %e %e %e\n",muonpos.x,muonpos.y,muonpos.z);
+#ifdef _DEBACO
+    print_vec3("Muon pos (cart): ",muonpos);
 #endif
 
+    atmpos = new_vec3_zero();
 
-#ifdef _DEBUG
+
+#ifdef _DEBACO
     for (atom = 0; atom < in_natoms; ++atom)
     {
 
         /* atom position in reduced coordinates */
-        atmpos->x =  in_positions[3*atom];
-        atmpos->y =  in_positions[3*atom+1];
-        atmpos->z =  in_positions[3*atom+2];
+        vec3_set(atmpos, 
+                          in_positions[3*atom],
+                          in_positions[3*atom+1],
+                          in_positions[3*atom+2]);
 
-        printf("Atom pos (crys): %e %e %e\n",atmpos.x,atmpos.y,atmpos.z);
+        print_vec3("Atom pos (crys): ",atmpos);
 
         /* go to cartesian coordinates (in Angstrom!) */
-        atmpos = mat3_vmul(atmpos,sc_lat);
+        mat3_vmul(atmpos,sc_lat, tmp);
 
-        printf("Atom pos (cart): %e %e %e\n",atmpos.x,atmpos.y,atmpos.z);
+        print_vec3("Atom pos (cart): ",tmp);
     }
 
 #endif
 
 
-    atmpos = new_vec3_zero();
+    
 
 
 #pragma omp parallel
@@ -160,13 +171,13 @@ void DipolarTensor(const double *in_positions,
                                  ( in_positions[3*atom+2] + (double) k) / (double) scz);
 
                         /* go to cartesian coordinates (in Angstrom!) */
-                        mat3_vmul(atmpos, sc_lat, atmpos);
+                        mat3_vmul(atmpos, sc_lat, tmp);
 
                         /*printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z); */
                         /* difference between atom pos and muon pos (cart coordinates) */
 
-                        vec3_sub(atmpos,muonpos);
-                        r = atmpos;
+                        vec3_sub(tmp,muonpos);
+                        r = tmp;
                         vec3_muls(-1.,r);
                         n = vec3_norm(r);
                         if (n < in_radius)
@@ -205,9 +216,11 @@ void DipolarTensor(const double *in_positions,
     mat3_set(A, Axx, Axy, Axz, Axy, Ayy, Ayz, Axz, Ayz, Azz);
     mat3_getp(A, out_field);
     mat3_free(A);
+    mat3_free(aux);
     vec3_free(muonpos);
     mat3_free(sc_lat);
     vec3_free(atmpos);
+    vec3_free(tmp);
 }
 
 

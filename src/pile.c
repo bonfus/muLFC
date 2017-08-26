@@ -82,7 +82,7 @@ void pile_move_elements_from_position(pile * p, unsigned int pos)
     for (i = (p->nElements-1); i-- > pos; )
     {
         p->ranks[i+1] = p->ranks[i];
-        memcpy(p->elements[i+1], p->elements[i], sizeof(vec3));
+        vec3_cpy(p->elements[i+1], p->elements[i]);
     }
 }
 
