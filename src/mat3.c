@@ -95,6 +95,19 @@ void mat3_free(mat3* m) {
     free(m);
 }
 
+int mat3_cpy(mat3* d,  mat3* s) {
+    d->a->x = s->a->x;
+    d->a->y = s->a->y;
+    d->a->z = s->a->z;
+    d->b->x = s->b->x;
+    d->b->y = s->b->y;
+    d->b->z = s->b->z;
+    d->c->x = s->c->x;
+    d->c->y = s->c->y;
+    d->c->z = s->c->z;
+    return 0;
+}
+
 int mat3_add(mat3 * m, mat3 * n)
 {
 

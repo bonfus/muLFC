@@ -38,10 +38,10 @@ int mat3_inv(mat3 * i, mat3 * minv);
 #ifndef __GSL
 void mat3_free(mat3* m);
 int mat3_mul(mat3 *, mat3*, mat3*); 
-int mat3_add(mat3*,  mat3*); 
+int mat3_add(mat3*,  mat3*);
 int mat3_mulv( mat3*,  vec3*, vec3*);
 int mat3_vmul( vec3*,  mat3*, vec3*);
-
+int mat3_cpy(mat3*,  mat3*);
 
 #else
 

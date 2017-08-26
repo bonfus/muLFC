@@ -161,8 +161,7 @@ void  SimpleSum(const double *in_positions,
     print_vec3("Muon pos (frac):",muonpos);
 #endif
 
-    /* mat3_vmul(muonpos,sc_lat,muonpos); */
-    gsl_blas_dgemv (CblasTrans, 1.0, sc_lat, muonpos, 0.0, auxv);
+    mat3_vmul(muonpos,sc_lat,auxv);
     vec3_cpy(muonpos, auxv);
 
 #ifdef _DEBACO
