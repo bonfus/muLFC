@@ -94,7 +94,7 @@ void FastIncommSum(const double *in_positions,
     pile CCont, SCont;
 
     vec3 * K;
-    vec3 * tmp;
+    vec3 * tmp, * tmp2;
     mat3* aux;
     mat3* sctmp;
 
@@ -102,6 +102,7 @@ void FastIncommSum(const double *in_positions,
 
     /* initialize variables */
     tmp = new_vec3_zero();
+    tmp2 = new_vec3_zero();
     aux = new_mat3_zero();
     atmpos = new_vec3_zero();
     r = new_vec3_zero();
@@ -322,11 +323,11 @@ void FastIncommSum(const double *in_positions,
                             vec3_cpy(tmp,r);
                             vec3_sub(tmp,refatmpos[a]);
                             /*vec3_muls(-1.,tmp); */
-                            mat3_vmul(tmp,inv_sc_lat,tmp); /* now in crystal coord */
-                            /*printf("crysvec : %e %e %e\n", tmp->x, tmp->y,tmp->z); */
+                            mat3_vmul(tmp,inv_sc_lat,tmp2); /* now in crystal coord */
+                            /*print_vec3("crysvec : ", tmp2); */
                             /* */
-                            c = cos ( 2.0*M_PI * (vec3_dot(K,tmp) + phi ) );
-                            s = sin ( 2.0*M_PI * (vec3_dot(K,tmp) + phi ) );
+                            c = cos ( 2.0*M_PI * (vec3_dot(K,tmp2) + phi ) );
+                            s = sin ( 2.0*M_PI * (vec3_dot(K,tmp2) + phi ) );
 
                             /* unit vector */
                             vec3_muls(-1.0/n,r);                                  /* (*) */
@@ -611,6 +612,7 @@ void FastIncommSum(const double *in_positions,
     vec3_free(K);
     vec3_free(muonpos);
     vec3_free(tmp);
+    vec3_free(tmp2);
 
     mat3_free(aux);
     mat3_free(sc_lat);
