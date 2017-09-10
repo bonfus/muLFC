@@ -86,11 +86,11 @@ void FastIncommSum(const double *in_positions,
     double *stagmom=malloc(in_natoms*sizeof(double));                    /* this is m_0 */
     struct vec3 *refatmpos=malloc(in_natoms*sizeof(struct vec3));             /* reference atom used to produce C and S     */
     struct vec3 *Ahelix=malloc(in_natoms * sizeof(struct vec3));
-	struct vec3 *Bhelix= malloc(in_natoms * sizeof(struct vec3));/* two unit vectors describing the helix in the m_0 (cos(phi).a +/- sin(phi).b) */
+    struct vec3 *Bhelix= malloc(in_natoms * sizeof(struct vec3));/* two unit vectors describing the helix in the m_0 (cos(phi).a +/- sin(phi).b) */
     struct vec3 *SDip= malloc(in_natoms * sizeof(struct vec3));
-	struct vec3* CDip= malloc(in_natoms * sizeof(struct vec3)); /* sums of contribution providing cosine and sine prefactors */
+    struct vec3* CDip= malloc(in_natoms * sizeof(struct vec3)); /* sums of contribution providing cosine and sine prefactors */
     struct vec3 *SLor= malloc(in_natoms * sizeof(struct vec3));  
-	struct vec3	*CLor= malloc(in_natoms * sizeof(struct vec3));/* sums of contribution providing cosine and sine prefactors */
+    struct vec3	*CLor= malloc(in_natoms * sizeof(struct vec3));/* sums of contribution providing cosine and sine prefactors */
     
     pile CCont, SCont;
     
@@ -98,17 +98,17 @@ void FastIncommSum(const double *in_positions,
     
 
     unsigned int a, angn;     /* counter for atoms */
-	struct vec3 tmp;
-	double angle = 0;
-	struct vec3 BDip;
-	struct vec3 BLor;
-	struct vec3 BCont;
+    struct vec3 tmp;
+    double angle = 0;
+    struct vec3 BDip;
+    struct vec3 BLor;
+    struct vec3 BCont;
 
 	/* for contact field evaluation */
-	struct vec3 CBCont = vec3_zero();
-	struct vec3 SBCont = vec3_zero();
-	int NofM = 0; /* Number of moments considered */
-	double SumOfWeights = 0;
+    struct vec3 CBCont = vec3_zero();
+    struct vec3 SBCont = vec3_zero();
+    int NofM = 0; /* Number of moments considered */
+    double SumOfWeights = 0;
 
     /* initialize variables */
 
@@ -544,14 +544,14 @@ void FastIncommSum(const double *in_positions,
     /* free stuff used for contact field */
     pile_free(&CCont);
     pile_free(&SCont);
-	free(stagmom);
-	free(refatmpos); 
-	free(Ahelix); 
-	free(Bhelix); 
-	free(SDip); 
-	free(CDip); 
-	free(SLor); 
-	free(CLor);
+    free(stagmom);
+    free(refatmpos); 
+    free(Ahelix); 
+    free(Bhelix); 
+    free(SDip); 
+    free(CDip); 
+    free(SLor); 
+    free(CLor);
 }
 
 

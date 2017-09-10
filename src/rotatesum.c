@@ -53,7 +53,7 @@
  * @param out_field_lor  Lorentz field in Cartesian coordinates defined by in_cell.
  */
 void RotataSum(const double *in_positions, 
-		  const double *in_fc, const double *in_K, const double *in_phi,
+          const double *in_fc, const double *in_K, const double *in_phi,
           const double *in_muonpos, const int * in_supercell, const double *in_cell, 
           const double radius, const unsigned int nnn_for_cont, const double cont_radius, 
           unsigned int in_natoms, 
@@ -89,12 +89,12 @@ void RotataSum(const double *in_positions,
     /* for rotation */
     struct vec3 axis;
     struct mat3 rmat;
-	struct vec3 * B = malloc(in_nangles * sizeof(struct vec3));
-	struct vec3 * BLor = malloc(in_nangles * sizeof(struct vec3));
-	pile * MCont = malloc(in_nangles * sizeof(pile));
-	struct vec3 BCont;
-	int NofM = 0;
-	double SumOfWeights = 0;
+    struct vec3 * B = malloc(in_nangles * sizeof(struct vec3));
+    struct vec3 * BLor = malloc(in_nangles * sizeof(struct vec3));
+    pile * MCont = malloc(in_nangles * sizeof(pile));
+    struct vec3 BCont;
+    int NofM = 0;
+    double SumOfWeights = 0;
 
     /* defines axis */
     axis.x = in_axis[0];
@@ -159,7 +159,7 @@ void RotataSum(const double *in_positions,
     {
         B[angn] = vec3_zero();
         BLor[angn] = vec3_zero();
-        pile_init(&MCont[angn],nnn_for_cont);
+        pile_init(&(MCont[angn]),nnn_for_cont);
     }
     
     for (i = 0; i < scx; ++i)
@@ -244,14 +244,13 @@ void RotataSum(const double *in_positions,
                                         vec3_muls( onebrcube ,vec3_sub(vec3_muls(3.0*vec3_dot(rm,u),u), rm))
                                     );
 
-							/* Calculate Contact Field */
-							if (n < cont_radius) {
+                            /* Calculate Contact Field */
+                            if (n < cont_radius) {
 #ifdef _DEBUG                      
-								printf("Adding moment to Cont: n: %e, m: %e %e %e! (Total: %d)\n", n, rm.x,rm.y,rm.z,nnn_for_cont);
-#endif							
-								pile_add_element(&MCont[angn], pow(n,CONT_SCALING_POWER), vec3_muls(1./pow(n,CONT_SCALING_POWER),rm));  /* see ass.c for this line */
-							}
-                                    
+                                printf("Adding moment to Cont: n: %e, m: %e %e %e! (Total: %d)\n", n, rm.x,rm.y,rm.z,nnn_for_cont);
+#endif
+                                pile_add_element(&MCont[angn], pow(n,CONT_SCALING_POWER), vec3_muls(1./pow(n,CONT_SCALING_POWER),rm));  /* see ass.c for this line */
+                            }
                         }
 #ifdef _DEBUG               
                         for (angn = 0; angn < in_nangles; ++angn)
@@ -270,8 +269,8 @@ void RotataSum(const double *in_positions,
 
     for (angn = 0; angn < in_nangles; ++angn)
     {
-		BLor[angn] = vec3_muls(0.33333333333*11.654064, vec3_muls(3./(4.*M_PI*pow(radius,3)),BLor[angn]));/* to tesla units */
-		/*printf("The Lorents field contribution is: %e %e %e Tesla and it will NOT be added!!\n",BLor[angn].x,BLor[angn].y,BLor[angn].z);     */
+        BLor[angn] = vec3_muls(0.33333333333*11.654064, vec3_muls(3./(4.*M_PI*pow(radius,3)),BLor[angn]));/* to tesla units */
+        /*printf("The Lorents field contribution is: %e %e %e Tesla and it will NOT be added!!\n",BLor[angn].x,BLor[angn].y,BLor[angn].z);     */
 
         out_field_lor[3*angn+0] = BLor[angn].x;
         out_field_lor[3*angn+1] = BLor[angn].y;
@@ -300,30 +299,30 @@ void RotataSum(const double *in_positions,
     
     for (angn = 0; angn < in_nangles; ++angn)
     {
-		/* (re) initialize */
-		BCont = vec3_zero();
-		NofM = 0; /* Number of moments considered */
-		SumOfWeights = 0;
-		
-		for (i=0; i < nnn_for_cont; i++) {
-			if (MCont[angn].ranks[i] >= 0.0) {
-				BCont = vec3_add(BCont, MCont[angn].elements[i]);
-				SumOfWeights += (1./MCont[angn].ranks[i]);
-				NofM++;
-			}
-		}
-		
-		pile_free(&MCont[angn]);
-		
-		
-		if (NofM >0) {
-			BCont = vec3_muls((1./SumOfWeights) * 7.769376 , BCont);
-		} /* otherwise is zero anyway! */
-		
-		out_field_cont[3*angn+0] = BCont.x;
-		out_field_cont[3*angn+1] = BCont.y;
-		out_field_cont[3*angn+2] = BCont.z; 
-	}   
-}					 
+        /* (re) initialize */
+        BCont = vec3_zero();
+        NofM = 0; /* Number of moments considered */
+        SumOfWeights = 0;
+
+        for (i=0; i < nnn_for_cont; i++) {
+            if (MCont[angn].ranks[i] >= 0.0) {
+                BCont = vec3_add(BCont, MCont[angn].elements[i]);
+                SumOfWeights += (1./MCont[angn].ranks[i]);
+                NofM++;
+            }
+        }
+
+        pile_free(&(MCont[angn]));
+
+        if (NofM >0) {
+            BCont = vec3_muls((1./SumOfWeights) * 7.769376 , BCont);
+        } /* otherwise is zero anyway! */
+
+        out_field_cont[3*angn+0] = BCont.x;
+        out_field_cont[3*angn+1] = BCont.y;
+        out_field_cont[3*angn+2] = BCont.z; 
+    }
+    free(MCont);  
+}
 
 
