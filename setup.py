@@ -4,6 +4,10 @@ from os import path
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 import distutils
+
+# ugly hack to keep tests under the python folder
+sys.path.insert(0, path.join(path.dirname(__file__),'python'))
+
 sources = ['simplesum.c', \
            'rotatesum.c', \
            'fastincommsum.c', \
@@ -11,6 +15,7 @@ sources = ['simplesum.c', \
            'mat3.c', \
            'pile.c', \
            'dipolartensor.c']
+
 src_sources = []
 for s in sources:
     src_sources.append(
