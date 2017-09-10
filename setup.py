@@ -3,7 +3,6 @@ import sys
 from os import path
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
-import distutils
 
 # ugly hack to keep tests under the python folder
 sys.path.insert(0, path.join(path.dirname(__file__),'python'))
@@ -43,14 +42,12 @@ for compiler, args in [
         ('gcc', ['-O3', '-g0', '-std=c90']),
         ('unix', ['-O3', '-g0', '-std=c90'])]:
     COMPILE_ARGS[compiler] += args
-
-compiler=distutils.ccompiler.get_default_compiler()
-LIB_ARGS = []
-if compiler == "msvc":
-    LIB_ARGS.append("")
-else:
-    LIB_ARGS.append("m")
-
+# add math lib if needed
+for compiler, args in [
+        ('msvc', []),
+        ('unix', ['-lm']),
+        ('gcc', ['-lm'])]:
+    LINK_ARGS[compiler] += args
 
 # Ugly hack to have openMP as option
 if "--with-openmp" in sys.argv:
@@ -58,12 +55,12 @@ if "--with-openmp" in sys.argv:
             ('msvc', ['/openmp']),
             ('unix', ['-fopenmp']),
             ('gcc', ['-fopenmp'])]:
-        COMPILE_ARGS[compiler] += args    
+        COMPILE_ARGS[compiler] += args
     for compiler, args in [
             ('msvc', []),
             ('unix', ['-lgomp']),
             ('gcc', ['-lgomp'])]:
-        LINK_ARGS[compiler] += args    
+        LINK_ARGS[compiler] += args
 
     sys.argv.remove("--with-openmp")
 

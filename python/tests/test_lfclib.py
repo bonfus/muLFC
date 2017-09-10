@@ -325,12 +325,8 @@ class TestLFCExtension(unittest.TestCase):
     
     def test_dipolar_tensor(self):
         # initial stupid test...
-        ###### TODO : do a reasonable test!!!  ######
+        ###### TODO : rewrite this test!!!  ######
         p  = np.array([[0.,0.,0.]])
-        fc = np.array([[0.,0.,1.]],dtype=np.complex)
-        k  = np.array([0.,0.,0.0])
-        
-        phi= np.array([0.,0.,0.])
         
         mu = np.array([0.5,0.5,0.5])
         

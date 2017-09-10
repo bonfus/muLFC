@@ -534,13 +534,10 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
 
 
 static PyObject * py_lfclib_dt(PyObject *self, PyObject *args) {
+  
   double r=0.0;
-    
- PyObject *opositions, *omu, *osupercell, *ocell;
-  
- PyArrayObject *positions,  *mu, *supercell, *cell;
-  
-  PyArrayObject *odt;  
+  PyObject *opositions, *omu, *osupercell, *ocell;
+  PyArrayObject *positions,  *mu, *supercell, *cell, *odt;
   
   int num_atoms=0;
   int * in_supercell;
