@@ -133,8 +133,8 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   PyArrayObject *odip, *ocont, *olor;
   /* General validity checks */
 
-  npy_intp pndims=NULL; 
-  npy_intp fcndims=NULL; 
+  npy_intp pndims=0; 
+  npy_intp fcndims=0; 
 
   npy_intp * pShape=NULL; 
   npy_intp * fcShape=NULL; 
