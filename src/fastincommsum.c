@@ -88,9 +88,9 @@ void FastIncommSum(const double *in_positions,
     struct vec3 *Ahelix=malloc(in_natoms * sizeof(struct vec3));
     struct vec3 *Bhelix= malloc(in_natoms * sizeof(struct vec3));/* two unit vectors describing the helix in the m_0 (cos(phi).a +/- sin(phi).b) */
     struct vec3 *SDip= malloc(in_natoms * sizeof(struct vec3));
-    struct vec3* CDip= malloc(in_natoms * sizeof(struct vec3)); /* sums of contribution providing cosine and sine prefactors */
+    struct vec3 *CDip= malloc(in_natoms * sizeof(struct vec3)); /* sums of contribution providing cosine and sine prefactors */
     struct vec3 *SLor= malloc(in_natoms * sizeof(struct vec3));  
-    struct vec3	*CLor= malloc(in_natoms * sizeof(struct vec3));/* sums of contribution providing cosine and sine prefactors */
+    struct vec3 *CLor= malloc(in_natoms * sizeof(struct vec3));/* sums of contribution providing cosine and sine prefactors */
     
     pile CCont, SCont;
     
@@ -104,7 +104,7 @@ void FastIncommSum(const double *in_positions,
     struct vec3 BLor;
     struct vec3 BCont;
 
-	/* for contact field evaluation */
+    /* for contact field evaluation */
     struct vec3 CBCont = vec3_zero();
     struct vec3 SBCont = vec3_zero();
     int NofM = 0; /* Number of moments considered */
@@ -404,23 +404,23 @@ void FastIncommSum(const double *in_positions,
                                             )
                                         );
                         }
-						/* Contact */
-						if (n < cont_radius) {
+                        /* Contact */
+                        if (n < cont_radius) {
                             #pragma omp critical(contact)
                             {
                                 pile_add_element(&CCont, pow(n,CONT_SCALING_POWER), 
-							  								vec3_add(
-							  									vec3_muls( stagmom[a] * c , Ahelix[a]),
-							  									vec3_muls( stagmom[a] * s , Bhelix[a])
-							  								)							
-                                                );
+                                  vec3_add(
+                                    vec3_muls( stagmom[a] * c , Ahelix[a]),
+                                    vec3_muls( stagmom[a] * s , Bhelix[a])
+                                        )
+                                );
                                 pile_add_element(&SCont, pow(n,CONT_SCALING_POWER), 
-							  								vec3_sub(
-							  									vec3_muls( stagmom[a]* s , Ahelix[a]),
-							  									vec3_muls( stagmom[a]* c , Bhelix[a])
-							  								)
-                                                );
-						    }
+                                  vec3_sub(
+                                    vec3_muls( stagmom[a]* s , Ahelix[a]),
+                                    vec3_muls( stagmom[a]* c , Bhelix[a])
+                                  )
+                                );
+                            }
                         }
 #ifdef _DEBUG                      
                         printf("CDip %d is now : %e %e %e\n", a, CDip[a].x, CDip[a].y, CDip[a].z);
