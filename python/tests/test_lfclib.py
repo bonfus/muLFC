@@ -21,7 +21,6 @@ def rotation_matrix(axis, theta):
         
 class TestLFCExtension(unittest.TestCase):
     def test_one_over_r_cube(self):
-        
         p  = np.array([[0.,0.,0.]])
         fc = np.array([[0.,0.,1.]],dtype=np.complex)
         k  = np.array([0.,0.,0.])
@@ -60,7 +59,6 @@ class TestLFCExtension(unittest.TestCase):
         np.testing.assert_array_almost_equal(d2, np.array([0,0,-0.92740095])*(1./(np.linalg.norm(mu2*2.))**3) )
         
     def test_rotation_of_cart_coord(self):
-        
         p  = np.array([[0.1,0.2,0.3]])
         fc = np.array([[0.2,0.4,1.]],dtype=np.complex)
         k  = np.array([0.2,0.3,0.4])
@@ -327,12 +325,8 @@ class TestLFCExtension(unittest.TestCase):
     
     def test_dipolar_tensor(self):
         # initial stupid test...
-        ###### TODO : do a reasonable test!!!  ######
+        ###### TODO : rewrite this test!!!  ######
         p  = np.array([[0.,0.,0.]])
-        fc = np.array([[0.,0.,1.]],dtype=np.complex)
-        k  = np.array([0.,0.,0.0])
-        
-        phi= np.array([0.,])
         
         mu = np.array([0.5,0.5,0.5])
         

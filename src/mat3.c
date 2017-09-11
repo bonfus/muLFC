@@ -89,8 +89,8 @@ struct vec3 mat3_vmul(struct vec3 v,struct mat3 m)
 	return u;	
 }
 
-// Get the rotation matrix representation a rotation 'r' around axis 'v'
-// make sure 'v' is a unit vector
+/* Get the rotation matrix representation a rotation 'r' around axis 'v' */
+/* make sure 'v' is a unit vector */
 struct mat3 mat3_aangle(struct vec3 v, scalar r)
 {
 	struct mat3 m;
@@ -116,12 +116,12 @@ struct mat3 mat3_aangle(struct vec3 v, scalar r)
 struct mat3 mat3_inv(struct mat3 i)
 {
 	struct mat3 minv;
-	// computes the inverse of a matrix m
-	double det = i.a.x * (i.b.y * i.c.z - i.c.y * i.b.z) -
+	/* computes the inverse of a matrix m */
+	scalar det = i.a.x * (i.b.y * i.c.z - i.c.y * i.b.z) -
 				i.a.y * (i.b.x * i.c.z - i.b.z * i.c.x) +
 				i.a.z * (i.b.x * i.c.y - i.b.y * i.c.x);
 	
-	double invdet = 1.0 / det;
+	scalar invdet = 1.0 / det;
 	
 	minv.a.x = (i.b.y * i.c.z - i.c.y * i.b.z) * invdet;
 	minv.a.y = (i.a.z * i.c.y - i.a.y * i.c.z) * invdet;

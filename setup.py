@@ -4,6 +4,9 @@ from os import path
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
+# ugly hack to keep tests under the python folder
+sys.path.insert(0, path.join(path.dirname(__file__),'python'))
+
 sources = ['simplesum.c', \
            'rotatesum.c', \
            'fastincommsum.c', \
@@ -11,6 +14,7 @@ sources = ['simplesum.c', \
            'mat3.c', \
            'pile.c', \
            'dipolartensor.c']
+
 src_sources = []
 for s in sources:
     src_sources.append(
@@ -35,10 +39,15 @@ LINK_ARGS = {'msvc':[],'gcc':[],'unix':[]}
 
 for compiler, args in [
         ('msvc', ['/EHsc', '/DHUNSPELL_STATIC']),
-        ('gcc', ['-O3', '-g0', '-std=c99']),
-        ('unix', ['-O3', '-g0', '-std=c99'])]:
+        ('gcc', ['-O3', '-g0', '-std=c90']),
+        ('unix', ['-O3', '-g0', '-std=c90'])]:
     COMPILE_ARGS[compiler] += args
-    
+# add math lib if needed
+for compiler, args in [
+        ('msvc', []),
+        ('unix', ['-lm']),
+        ('gcc', ['-lm'])]:
+    LINK_ARGS[compiler] += args
 
 # Ugly hack to have openMP as option
 if "--with-openmp" in sys.argv:
@@ -46,12 +55,12 @@ if "--with-openmp" in sys.argv:
             ('msvc', ['/openmp']),
             ('unix', ['-fopenmp']),
             ('gcc', ['-fopenmp'])]:
-        COMPILE_ARGS[compiler] += args    
+        COMPILE_ARGS[compiler] += args
     for compiler, args in [
             ('msvc', []),
             ('unix', ['-lgomp']),
             ('gcc', ['-lgomp'])]:
-        LINK_ARGS[compiler] += args    
+        LINK_ARGS[compiler] += args
 
     sys.argv.remove("--with-openmp")
 
@@ -69,9 +78,6 @@ class build_ext_compiler_check(build_ext):
         
         build_ext.build_extensions(self)
 
-
-
-    
 setup(name='LFC',
       version='0.1',
       description='Local Field Components (or lighting fast calculator) for muesr package',
@@ -80,7 +86,7 @@ setup(name='LFC',
       url='https://github.com/bonfus/muesr',
       packages=['LFC',],
       ext_modules=[Extension('lfclib', sources = ['python/lfclib.c',]+src_sources,
-                                      libraries=['m',],
+                                      libraries=[],
                                       include_dirs=numpy_include_dir)],
      package_dir={'LFC': 'python' },
      install_requires=[

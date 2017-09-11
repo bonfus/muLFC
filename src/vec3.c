@@ -56,12 +56,12 @@ struct vec3 vec3_muls(scalar s, struct vec3 v)
 	return t;
 }
 
-double vec3_norm(struct vec3 v)
+scalar vec3_norm(struct vec3 v)
 {
     return sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
 }
 
-double vec3_dot(struct vec3 v, struct vec3 u)
+scalar vec3_dot(struct vec3 v, struct vec3 u)
 {
     return v.x*u.x + v.y*u.y + v.z*u.z;
 }
