@@ -1,3 +1,6 @@
+language: python
+sudo: false
+
 matrix:
   include:
     - sudo: required
@@ -5,6 +8,12 @@ matrix:
         - docker
     - os: osx
 
+before_script:
+  - wget http://repo.continuum.io/miniconda/Miniconda-3.8.3-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda install --yes numpy=1.8
+  
 script:
   - pip install --user https://github.com/joerick/cibuildwheel/archive/master.zip
   - cibuildwheel --output-dir wheelhouse
