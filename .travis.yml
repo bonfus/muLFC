@@ -6,5 +6,5 @@ matrix:
     - os: osx
 
 script:
-  - pip install cibuildwheel==0.5.1
+  - pip install --user https://github.com/joerick/cibuildwheel/archive/master.zip
   - cibuildwheel --output-dir wheelhouse
