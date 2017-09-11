@@ -83,7 +83,7 @@ void FastIncommSum(const double *in_positions,
     /* tmp value for speed and clearness */
     struct vec3 crysvec;
     
-    double *stagmom=malloc(in_natoms*sizeof(double));                    /* this is m_0 */
+    scalar *stagmom=malloc(in_natoms*sizeof(scalar));                    /* this is m_0 */
     struct vec3 *refatmpos=malloc(in_natoms*sizeof(struct vec3));             /* reference atom used to produce C and S     */
     struct vec3 *Ahelix=malloc(in_natoms * sizeof(struct vec3));
     struct vec3 *Bhelix= malloc(in_natoms * sizeof(struct vec3));/* two unit vectors describing the helix in the m_0 (cos(phi).a +/- sin(phi).b) */
