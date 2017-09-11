@@ -6,6 +6,6 @@ matrix:
     - os: osx
   
 script:
-  - pip install --user numpy
   - pip install --user https://github.com/joerick/cibuildwheel/archive/master.zip
+  - export CIBW_BEFORE_BUILD="{pip} install --user numpy"
   - cibuildwheel --output-dir wheelhouse

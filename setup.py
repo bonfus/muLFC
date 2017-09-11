@@ -32,6 +32,7 @@ try:
     numpy_include_dir = [numpy_get_include()]
 except:
     numpy_include_dir = []
+    print("Warning: could not add numpy include dir.")
 
 # Ugly hack to set compiler flags 
 COMPILE_ARGS = {'msvc':[],'gcc':[],'unix':[]}
