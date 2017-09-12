@@ -1,11 +1,23 @@
+language: generic
+
 matrix:
   include:
     - sudo: required
       services:
         - docker
+      before_install:
+        - sudo apt-get install -y python-numpy
     - os: osx
-  
+    # Linux Python 3
+    - sudo: required
+      language: python
+      services:
+        - docker
+      env:
+        - "PYTHON=python3"
+      before_install:
+        - sudo apt-get install -y python3-numpy
+
 script:
   - pip install --user https://github.com/joerick/cibuildwheel/archive/master.zip
-  - export CIBW_BEFORE_BUILD="{pip} install --user numpy"
   - cibuildwheel --output-dir wheelhouse
