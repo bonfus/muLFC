@@ -40,8 +40,8 @@ LINK_ARGS = {'msvc':[],'gcc':[],'unix':[]}
 
 for compiler, args in [
         ('msvc', ['/EHsc', '/DHUNSPELL_STATIC']),
-        ('gcc', ['-O3', '-g0', '-std=c90']),
-        ('unix', ['-O3', '-g0', '-std=c90'])]:
+        ('gcc', ['-O3', '-g0']),
+        ('unix', ['-O3', '-g0'])]:
     COMPILE_ARGS[compiler] += args
 # add math lib if needed
 for compiler, args in [
