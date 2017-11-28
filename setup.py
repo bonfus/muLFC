@@ -79,17 +79,18 @@ class build_ext_compiler_check(build_ext):
         
         build_ext.build_extensions(self)
 
-setup(name='LFC',
+setup(name='mulfc',
       version='0.1',
-      description='Local Field Components (or lighting fast calculator) for muesr package',
+      description="Local Field Components (or lighting fast calculator) at \
+                    muon sites for the muesr package.",
       author='Pietro Bonfa',
       author_email='pietro.bonfa@fis.unipr.it',
-      url='https://github.com/bonfus/muesr',
-      packages=['LFC',],
+      url='https://github.com/bonfus/muLFC',
+      packages=['mulfc',],
       ext_modules=[Extension('lfclib', sources = ['python/lfclib.c',]+src_sources,
                                       libraries=[],
                                       include_dirs=numpy_include_dir)],
-     package_dir={'LFC': 'python' },
+     package_dir={'mulfc': 'python' },
      install_requires=[
           'numpy >= 1.6',
      ],

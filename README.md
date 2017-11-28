@@ -20,10 +20,26 @@ The python extension has the following dependencies:
 * Python 2.7, 3.1+      (http://www.python.org)
 * Numpy 1.6.0+          (http://www.numpy.org)
 
-(Windows is likely to be supported with minor changes to the code.)
-
 
 ### Installation
+
+The easiest way to install muLFC is using pre-baked wheels with 
+either pip:
+
+    pip install --index-url https://testpypi.python.org/pypi mulfc
+    
+or packagecloud:
+
+[packagecloud.io/muLFC/wheels](https://packagecloud.io/muLFC/wheels)
+
+In this latter case you have to choose the right package for your python installation. 
+For example, `LFC-0.1-cp36-cp36m-manylinux1_i686.whl` is compatible with
+Python 3.6 (cp36) and a 32 bit system, while `LFC-0.1-cp34-cp34m-manylinux1_x86_64.whl`
+is for Python 3.4 installed on a 64 bit system.
+
+If you want to build the code yourself, see below.
+
+### Compilation
 
 To compile and install the C library just do
 
