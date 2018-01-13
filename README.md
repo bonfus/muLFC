@@ -5,8 +5,9 @@ LFC is a minimal library to facilitate the evaluation of the local field at the 
 The original code comes from the muesr repository.
 
 
-Installing LFC
---------------
+Install
+-------
+
 This section provides an overview and guidance for installing LFC on
 various target platforms.
 
@@ -26,7 +27,7 @@ The python extension has the following dependencies:
 The easiest way to install muLFC is using pre-baked wheels with 
 either pip:
 
-    pip install --index-url https://testpypi.python.org/pypi mulfc
+    pip install mulfc
     
 or packagecloud:
 
@@ -37,9 +38,9 @@ For example, `LFC-0.1-cp36-cp36m-manylinux1_i686.whl` is compatible with
 Python 3.6 (cp36) and a 32 bit system, while `LFC-0.1-cp34-cp34m-manylinux1_x86_64.whl`
 is for Python 3.4 installed on a 64 bit system.
 
-If you want to build the code yourself, see below.
-
 ### Compilation
+
+You may want to build the code yourself, especially for optimizing performances.
 
 To compile and install the C library just do
 
@@ -61,7 +62,6 @@ python setup.py install
 ```
 
 The library and the python extension are independent from each other.
-
 
 Usage
 -----

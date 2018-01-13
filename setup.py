@@ -4,6 +4,11 @@ from os import path
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
+desc = """Local Field Components (or lighting fast calculator) at
+muon sites for the muesr package."""
+with open('README.md','r') as file:
+    long_desc = file.read()
+
 # ugly hack to keep tests under the python folder
 sys.path.insert(0, path.join(path.dirname(__file__),'python'))
 
@@ -81,8 +86,8 @@ class build_ext_compiler_check(build_ext):
 
 setup(name='mulfc',
       version='0.1',
-      description="Local Field Components (or lighting fast calculator) at \
-                    muon sites for the muesr package.",
+      description=desc,
+      long_description=long_desc,
       author='Pietro Bonfa',
       author_email='pietro.bonfa@fis.unipr.it',
       url='https://github.com/bonfus/muLFC',
