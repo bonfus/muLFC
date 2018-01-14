@@ -1,20 +1,17 @@
 Local Field Components
 ======================
 
-LFC is a minimal library to facilitate the evaluation of the local field at the muon site. 
-The original code comes from the muesr repository.
+LFC is a small library to facilitate the evaluation of the local field at the muon site. 
 
 
 Install
 -------
 
-This section provides an overview and guidance for installing LFC on
-various target platforms.
+The LFC C library has no dependencies. CMake is used as a building tool.
+Any C90 compiler can be used to build the library.
+The details for the Python package follows.
 
 ### Prerequisites
-
-The LFC C library has no dependencies. However, cmake is
-needed to compile the code.
 
 The python extension has the following dependencies:
 
@@ -24,8 +21,8 @@ The python extension has the following dependencies:
 
 ### Installation
 
-The easiest way to install muLFC is using pre-baked wheels with 
-either pip:
+The easiest way to install the python extension muLFC is using pre-baked
+wheels with pip:
 
     pip install mulfc
     
