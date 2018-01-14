@@ -85,7 +85,7 @@ class build_ext_compiler_check(build_ext):
         build_ext.build_extensions(self)
 
 setup(name='mulfc',
-      version='0.1',
+      version='0.0.1',
       description=desc,
       long_description=long_desc,
       author='Pietro Bonfa',
