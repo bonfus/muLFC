@@ -21,23 +21,14 @@ The python extension has the following dependencies:
 
 ### Installation
 
-The easiest way to install the python extension muLFC is using pre-baked
+The easiest way to install the Python extension is using pre-baked
 wheels with pip:
 
     pip install mulfc
-    
-or packagecloud:
-
-[packagecloud.io/muLFC/wheels](https://packagecloud.io/muLFC/wheels)
-
-In this latter case you have to choose the right package for your python installation. 
-For example, `LFC-0.1-cp36-cp36m-manylinux1_i686.whl` is compatible with
-Python 3.6 (cp36) and a 32 bit system, while `LFC-0.1-cp34-cp34m-manylinux1_x86_64.whl`
-is for Python 3.4 installed on a 64 bit system.
 
 ### Compilation
 
-You may want to build the code yourself, especially for optimizing performances.
+You may want to build the extension yourself, especially for optimizing performances.
 
 To compile and install the C library just do
 
