@@ -16,7 +16,7 @@ The details for the Python package follows.
 The python extension has the following dependencies:
 
 * Python 2.7, 3.1+      (http://www.python.org)
-* Numpy 1.6.0+          (http://www.numpy.org)
+* Numpy 1.8.0+          (http://www.numpy.org)
 
 
 ### Installation

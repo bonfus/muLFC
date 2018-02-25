@@ -8,8 +8,9 @@
  * 
  *
  * This file defines a set of functions to deal with a pile struct.
- * A pile is a list of (fixed) n elements. Only the elements with 
- * the n highest ranks are kept. The addition of an element can result
+ * A pile is a list of (fixed) n elements with positive definite ranks.
+ * Only the n elements with the highest rank r are kept.
+ * The addition of an element with rank r' can result
  * in either the removal of another element with lower rank or in an
  * unaltered pile if all the elements in the pile have ranks higher than
  * the one that is under consideration.
@@ -30,13 +31,29 @@ void pile_init(pile * p, unsigned int nElements)
 	p->nElements = nElements;
 	p->ranks = malloc(nElements * sizeof(double));
 	p->elements = malloc(nElements * sizeof(struct vec3));
-    
-    
-    for (i = 0; i < nElements; ++i)
-    {
-        p->ranks[i] = -1.0;
-        p->elements[i] = vec3_zero();
-    }
+  
+  
+  for (i = 0; i < nElements; ++i)
+  {
+    p->ranks[i] = -1.0;
+    p->elements[i] = vec3_zero();
+  }
+}
+
+/**
+ * This function resets nElements to zero vectors and their rank to -1.
+ * Since ranks must be positive, all these elements will be replaced.
+ * 
+ */
+void pile_reset(pile * p, unsigned int nElements)
+{
+	unsigned int i;
+
+  for (i = 0; i < nElements; ++i)
+  {
+    p->ranks[i] = -1.0;
+    p->elements[i] = vec3_zero();
+  }
 }
 
 /**

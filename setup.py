@@ -85,7 +85,7 @@ class build_ext_compiler_check(build_ext):
         build_ext.build_extensions(self)
 
 setup(name='mulfc',
-      version='0.0.1',
+      version='0.0.2',
       description=desc,
       long_description=long_desc,
       author='Pietro Bonfa',
@@ -94,10 +94,10 @@ setup(name='mulfc',
       packages=['mulfc',],
       ext_modules=[Extension('lfclib', sources = ['python/lfclib.c',]+src_sources,
                                       libraries=[],
-                                      include_dirs=numpy_include_dir)],
+                                      include_dirs=[numpy_include_dir, path.join('.','src')])],
      package_dir={'mulfc': 'python' },
      install_requires=[
-          'numpy >= 1.6',
+          'numpy >= 1.8',
      ],
      test_suite="tests",
      cmdclass={ 'build_ext': build_ext_compiler_check }
