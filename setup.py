@@ -94,7 +94,7 @@ setup(name='mulfc',
       packages=['mulfc',],
       ext_modules=[Extension('lfclib', sources = ['python/lfclib.c',]+src_sources,
                                       libraries=[],
-                                      include_dirs=[numpy_include_dir, path.join('.','src')])],
+                                      include_dirs=numpy_include_dir + [path.join('.','src')])],
      package_dir={'mulfc': 'python' },
      install_requires=[
           'numpy >= 1.8',
