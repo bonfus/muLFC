@@ -26,6 +26,18 @@ wheels with pip:
 
     pip install mulfc
 
+**Important note:** when installing on *Windows* with `pip`, the minimal
+dependencies for numpy are:
+
+| Python version | Numpy version |
+|----------------|---------------|
+| 2.7            | 1.8+          |
+| 3.5            | 1.10+         |
+| 3.6            | 1.12+         |
+
+Python versions are different from the one listed above are not
+distributed with precompiled wheels.
+
 ### Compilation
 
 You may want to build the extension yourself, especially for optimizing performances.
