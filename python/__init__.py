@@ -3,4 +3,4 @@ from .LFC import (get_version,
                      dipten,
                      find_largest_sphere)
 
-__version__ = "%d.%d.%d" % get_version()
+__version__ = "{}.{}.{}".format(* get_version() )
