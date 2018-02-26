@@ -1,13 +1,15 @@
 Local Field Components
 ======================
 
-LFC is a small library to facilitate the evaluation of the local field at the muon site. 
+muLFC is a small library to facilitate the evaluation of the local field
+at the muon site. It is distributed as a standard library with C APIs
+and a Python extension.
 
 
 Install
 -------
 
-The LFC C library has no dependencies. CMake is used as a building tool.
+The muLFC C library has no dependencies. CMake is used as a building tool.
 Any C90 compiler can be used to build the library.
 The details for the Python package follows.
 
@@ -27,16 +29,14 @@ wheels with pip:
     pip install mulfc
 
 **Important note:** when installing on *Windows* with `pip`, the minimal
-dependencies for numpy are:
+dependencies for Numpy are:
 
-| Python version | Numpy version |
-|----------------|---------------|
-| 2.7            | 1.8+          |
-| 3.5            | 1.10+         |
-| 3.6            | 1.12+         |
+Python 2.7 ➜ Numpy 1.8+
+Python 3.5 ➜ Numpy 1.10+
+Python 3.6 ➜ Numpy 1.12+
 
-Python versions are different from the one listed above are not
-distributed with precompiled wheels.
+For Python versions different from the ones listed above muLFC is not
+available as Python Wheels.
 
 ### Compilation
 
@@ -61,9 +61,10 @@ python setup.py test
 python setup.py install
 ```
 
-The library and the python extension are independent from each other.
+The library and the Python extension are independent from each other.
 
 Usage
 -----
 
-See documentation of the various functions.
+See [muesr](http://muesr.readthedocs.io) documentation or the documentation
+in the header of the various functions' source code.
