@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import unittest
-from LFC import locfield, find_largest_sphere
+try:
+    from mulfc import locfield, find_largest_sphere
+except ImportError:
+    from LFC import locfield, find_largest_sphere
 import numpy as np
 
         

@@ -31,12 +31,12 @@ wheels with pip:
 **Important note:** when installing on *Windows* with `pip`, the minimal
 dependencies for Numpy are:
 
-Python 2.7 ➜ Numpy 1.8+
-Python 3.5 ➜ Numpy 1.10+
-Python 3.6 ➜ Numpy 1.12+
+* Python 2.7 ➜ Numpy 1.8+
+* Python 3.5 ➜ Numpy 1.10+
+* Python 3.6 ➜ Numpy 1.12+
 
 For Python versions different from the ones listed above muLFC is not
-available as Python Wheels.
+available as Python Wheels, you'll have to compile and install it from source.
 
 ### Compilation
 
