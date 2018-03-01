@@ -1,7 +1,7 @@
-Local Field Components
-======================
+μLFC
+====
 
-muLFC is a small library to facilitate the evaluation of the local field
+μLFC is a small library to facilitate the evaluation of the local field
 at the muon site. It is distributed as a standard library with C APIs
 and a Python extension.
 
@@ -9,7 +9,7 @@ and a Python extension.
 Install
 -------
 
-The muLFC C library has no dependencies. CMake is used as a building tool.
+The μLFC C library has no dependencies. CMake is used as a building tool.
 Any C90 compiler can be used to build the library.
 The details for the Python package follows.
 
