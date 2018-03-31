@@ -9,8 +9,8 @@ and a Python extension.
 Install
 -------
 
-The μLFC C library has no dependencies. CMake is used as a building tool.
-Any C90 compiler can be used to build the library.
+The μLFC C++ library depends on Eigen. CMake is used as a building tool.
+Any C++ compiler can be used to build the library.
 The details for the Python package follows.
 
 ### Prerequisites
@@ -42,7 +42,8 @@ available as Python Wheels, you'll have to compile and install it from source.
 
 You may want to build the extension yourself, especially for optimizing performances.
 
-To compile and install the C library just do
+To compile and install the C++ library make sure Eigen is available in your
+system and do
 
 ```bash
 mkdir build
@@ -52,10 +53,10 @@ make
 make install
 ```
 
-To install the python extension you can do
+To install the python extension you have to provide the Eigen library
+inside a `eigen3` (can be symbolic link) and do
 
 ```bash
-cd python
 python setup.py build
 python setup.py test
 python setup.py install

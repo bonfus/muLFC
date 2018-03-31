@@ -46,7 +46,7 @@ static char py_lfclib_fields_docstring[] = "Calculate the Local Field components
 "    Phi: numpy.ndarray\n"
 "        Phases for the atoms in positions\n"
 "    Muon : numpy.ndarray\n"
-"        Muon position, in fractional coordinates.\n"
+"        Muon positions, in fractional coordinates.\n"
 "    Supercell : numpy.ndarray (dtype=np.int32)\n"
 "        Number of replica along the a, b, and c lattice vectors.\n"
 "    Cell : numpy.ndarray\n"
@@ -337,7 +337,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   in_K = (double *) malloc(3*sizeof(double));
   in_phi = (double *) malloc(num_atoms*sizeof(double));
   in_muonpos = (double *) malloc(3*sizeof(double));
-  in_supercell = malloc(3*sizeof(int));
+  in_supercell = (int *) malloc(3*sizeof(int));
   in_cell = (double *) malloc(9*sizeof(double));
   
   if (!in_positions || !in_fc || !in_K || !in_phi || !in_muonpos ||
@@ -493,7 +493,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   {
     case 1:
       SimpleSum(in_positions, in_fc, in_K, in_phi, in_muonpos, in_supercell, 
-        in_cell,r, nnn,rcont,num_atoms,cont,dip,lor);
+        in_cell,r, nnn,rcont,-1., num_atoms,1,cont,dip,lor);
       break;
     case 2:
       RotataSum(in_positions, in_fc, in_K, in_phi, in_muonpos, in_supercell, 
@@ -502,7 +502,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     case 3:
       FastIncommSum(in_positions, in_fc, in_K, in_phi, in_muonpos, in_supercell, 
         in_cell,r, nnn,rcont,num_atoms,nangles,cont,dip,lor);
-    
+      break;
   }
   Py_END_ALLOW_THREADS
 
@@ -592,7 +592,7 @@ static PyObject * py_lfclib_dt(PyObject *self, PyObject *args) {
 
 
   /* to avoid problems with int types */
-  in_supercell = malloc(3*sizeof(int));
+  in_supercell = (int *) malloc(3*sizeof(int));
   in_supercell[0] = *(npy_int64 *)PyArray_GETPTR1(supercell, 0);
   in_supercell[1] = *(npy_int64 *)PyArray_GETPTR1(supercell, 1);
   in_supercell[2] = *(npy_int64 *)PyArray_GETPTR1(supercell, 2);
@@ -626,6 +626,7 @@ static PyObject * py_lfclib_dt(PyObject *self, PyObject *args) {
       (double *) PyArray_DATA(cell), 
       r, num_atoms, 
       (double *) PyArray_DATA(odt));
+  
   Py_END_ALLOW_THREADS
   
   

@@ -25,19 +25,18 @@
  * elements will be replaced.
  * 
  */
-void pile_init(pile * p, unsigned int nElements)
+void pile_init(pile& p, unsigned int nElements)
 {
 	unsigned int i;
-	p->nElements = nElements;
-	p->ranks = malloc(nElements * sizeof(double));
-	p->elements = malloc(nElements * sizeof(struct vec3));
+	p.nElements = nElements;
+	p.ranks.resize(nElements);
+	p.elements.resize(3,nElements);
   
   
-  for (i = 0; i < nElements; ++i)
-  {
-    p->ranks[i] = -1.0;
-    p->elements[i] = vec3_zero();
-  }
+  p.ranks.setOnes();
+  p.ranks *= -1.0;
+  p.elements.setZero();
+
 }
 
 /**
@@ -45,15 +44,13 @@ void pile_init(pile * p, unsigned int nElements)
  * Since ranks must be positive, all these elements will be replaced.
  * 
  */
-void pile_reset(pile * p, unsigned int nElements)
+void pile_reset(pile& p, unsigned int nElements)
 {
 	unsigned int i;
-
-  for (i = 0; i < nElements; ++i)
-  {
-    p->ranks[i] = -1.0;
-    p->elements[i] = vec3_zero();
-  }
+  
+  p.ranks.setOnes();
+  p.ranks *= -1.0;
+  p.elements.setZero();
 }
 
 /**
@@ -63,20 +60,20 @@ void pile_reset(pile * p, unsigned int nElements)
  * the last one, and adds the vector.
  * 
  */
-void pile_add_element(pile * p, double rank, struct vec3 v)
+void pile_add_element(pile& p, double rank, const Vec3& v)
 {
 	unsigned int i;
-	for ( i = 0; i < p->nElements; i++)
+	for ( i = 0; i < p.nElements; i++)
 	{
-		if (p->ranks[i] == -1.0) {
-			p->ranks[i] = rank;
-			p->elements[i] = v;
+		if (p.ranks(i) < 0.0) {
+			p.ranks(i) = rank;
+			p.elements.col(i) = v;
 			break;
 		}
-		if (p->ranks[i] > rank) {
+		if (p.ranks(i) > rank) {
 			pile_move_elements_from_position(p, i);
-			p->ranks[i] = rank;
-			p->elements[i] = v;
+			p.ranks(i) = rank;
+			p.elements.col(i) = v;
 			break;
 		}
 	}
@@ -89,18 +86,18 @@ void pile_add_element(pile * p, double rank, struct vec3 v)
  * If nElements = 1 nothing should be done. Otherwise copy all the 
  * elements form nElements-2-i to nElements-1-i
  */
-void pile_move_elements_from_position(pile * p, unsigned int pos)
+void pile_move_elements_from_position(pile& p, unsigned int pos)
 {
 	unsigned int i;
 	/* the first -1 is for 0 indexing */
 	/* the second -1 is becouse if only the last element must be moved it is thrashed! */
-	if (p->nElements < 2) {
+	if (p.nElements < 2) {
 		return;
 	}
-	for (i = (p->nElements-1) ; i-- > pos ;)
+	for (i = (p.nElements-1) ; i-- > pos ;)
 	{
-		p->ranks[i+1] = p->ranks[i];
-		p->elements[i+1] = p->elements[i];
+		p.ranks(i+1) = p.ranks(i);
+		p.elements.col(i+1) = p.elements.col(i);
 	}
 }
 
@@ -110,8 +107,7 @@ void pile_move_elements_from_position(pile * p, unsigned int pos)
  * Cleanup allocated memory 
  * 
  */
-void pile_free(pile * p)
+void pile_free(pile& p)
 {
-	free(p->ranks);
-	free(p->elements);
+
 }

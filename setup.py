@@ -6,19 +6,19 @@ from setuptools.command.build_ext import build_ext
 
 desc = """Local Field Components (or lighting fast calculator) at
 muon sites for the muesr package."""
-with open('README.md','r') as file:
-    long_desc = file.read()
+#with open('README.md','r') as file:
+#    long_desc = file.read()
 
 # ugly hack to keep tests under the python folder
 sys.path.insert(0, path.join(path.dirname(__file__),'python'))
 
-sources = ['simplesum.c', \
-           'rotatesum.c', \
-           'fastincommsum.c', \
-           'vec3.c', \
-           'mat3.c', \
-           'pile.c', \
-           'dipolartensor.c']
+sources = ['simplesum.cc', \
+           'dipolesum.cc', \
+           'rotatesum.cc', \
+           'fastincommsum.cc', \
+           'dipolartensor.cc', \
+           'pile.cc', \
+           'lattice.cc']
 
 src_sources = []
 for s in sources:
@@ -40,35 +40,37 @@ except:
     print("Warning: could not add numpy include dir.")
 
 # Ugly hack to set compiler flags 
-COMPILE_ARGS = {'msvc':[],'gcc':[],'unix':[]}
-LINK_ARGS = {'msvc':[],'gcc':[],'unix':[]}
+COMPILE_ARGS = {'msvc':[],'gcc':[],'g++':[],'unix':[]}
+LINK_ARGS = {'msvc':[],'gcc':[],'g++':[],'unix':[]}
 
 for compiler, args in [
         ('msvc', ['/EHsc', '/DHUNSPELL_STATIC']),
-        ('gcc', ['-O3', '-g0']),
-        ('unix', ['-O3', '-g0'])]:
+        ('gcc', ['-O3', '-g']),
+        ('g++', ['-O3', '-g']),
+        ('unix', ['-O3', '-g'])]:
     COMPILE_ARGS[compiler] += args
 # add math lib if needed
 for compiler, args in [
         ('msvc', []),
         ('unix', ['-lm']),
-        ('gcc', ['-lm'])]:
+        ('gcc', ['-lm']),
+        ('g++', ['-lm'])]:
     LINK_ARGS[compiler] += args
 
-# Ugly hack to have openMP as option
-if "--with-openmp" in sys.argv:
-    for compiler, args in [
-            ('msvc', ['/openmp']),
-            ('unix', ['-fopenmp']),
-            ('gcc', ['-fopenmp'])]:
-        COMPILE_ARGS[compiler] += args
-    for compiler, args in [
-            ('msvc', []),
-            ('unix', ['-lgomp']),
-            ('gcc', ['-lgomp'])]:
-        LINK_ARGS[compiler] += args
-
-    sys.argv.remove("--with-openmp")
+# Ugly hack to have openMP as option  --- TEMPORARILY DISABLED
+#if "--with-openmp" in sys.argv:
+#    for compiler, args in [
+#            ('msvc', ['/openmp']),
+#            ('unix', ['-fopenmp']),
+#            ('g++', ['-fopenmp'])]:
+#        COMPILE_ARGS[compiler] += args
+#    for compiler, args in [
+#            ('msvc', []),
+#            ('unix', ['-lgomp']),
+#            ('g++', ['-lgomp'])]:
+#        LINK_ARGS[compiler] += args
+#
+#    sys.argv.remove("--with-openmp")
 
 class build_ext_compiler_check(build_ext):
     def build_extensions(self):
@@ -87,14 +89,14 @@ class build_ext_compiler_check(build_ext):
 setup(name='mulfc',
       version='0.0.2',
       description=desc,
-      long_description=long_desc,
+      long_description=desc,
       author='Pietro Bonfa',
       author_email='pietro.bonfa@fis.unipr.it',
       url='https://github.com/bonfus/muLFC',
       packages=['mulfc',],
       ext_modules=[Extension('lfclib', sources = ['python/lfclib.c',]+src_sources,
                                       libraries=[],
-                                      include_dirs=numpy_include_dir + [path.join('.','src')])],
+                                      include_dirs=numpy_include_dir + [path.join('.','src') , path.join('.','eigen3')])],
      package_dir={'mulfc': 'python' },
      install_requires=[
           'numpy >= 1.8',
