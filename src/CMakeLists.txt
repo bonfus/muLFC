@@ -1,5 +1,5 @@
 # set source files
-set (sources simplesum.cc lattice.cc pile.cc dipolesum.cc fastincommsum.cc rotatesum.cc dipolartensor.cc)
+set (sources simplesum.cc lattice.cc pile.cc dipolesum.cc fastincommsum.cc rotatesum.cc randomsample.cc dipolartensor.cc parsers.cc randomness.cc)
 set (devel-headers simplesum.h fastincommsum.h rotatesum.h dipolartensor.h config.h)
 
 #Eigen

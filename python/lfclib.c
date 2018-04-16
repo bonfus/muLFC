@@ -100,7 +100,7 @@ static char py_lfclib_dt_docstring[] = "Dipolar tensor calculation.\n"
 
 
 
-static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
+static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwargs) {
   /* input variables */
   char* calc_type = NULL;
   unsigned int nnn=0;
@@ -108,6 +108,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   
   double r=0.0;
   double rcont=0.0;
+  double ratms=-1.0;
     
   PyObject *opositions, *oFC, *oK, *oPhi;
   PyObject *omu, *osupercell, *ocell;
@@ -119,6 +120,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
 
   /* local variables */
   int num_atoms=0;
+  int num_muons=0;
   int icalc_type=0;
   
   
@@ -141,20 +143,25 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   npy_intp fcndims=0; 
 
   npy_intp * pShape=NULL; 
+  npy_intp * muShape=NULL; 
   npy_intp * fcShape=NULL; 
-
   npy_intp * phiSpahe=NULL; 
 
   int i;
   int nd = 1;
   npy_cdouble v;
-
+  static char *kwlist[] = {"ctype", "positions", "FC", "K", 
+                            "phi", "muon", "supercell", "cell",
+                            "r", "nnn", "rcont", "nangles", "axis", "dist_from_atoms", NULL};
+  
   /* put arguments into variables */
-  if (!PyArg_ParseTuple(args, "sOOOOOOOdId|IO", &calc_type, 
+  // if (!PyArg_ParseTuple(args, "sOOOOOOOdId|IO", &calc_type, 
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sOOOOOOOdId|IOd", kwlist,
+                                        &calc_type, 
                                         &opositions, &oFC, &oK, &oPhi,
                                         &omu, &osupercell, &ocell,
                                         &r,&nnn,&rcont,
-                                        &nangles,&orot_axis)) {
+                                        &nangles,&orot_axis, &ratms)) {
     return NULL;
   }
   
@@ -167,9 +174,8 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
                                               NPY_ARRAY_IN_ARRAY);
   Phi = (PyArrayObject *) PyArray_FROMANY(oPhi, NPY_DOUBLE, 1, 1,
                                               NPY_ARRAY_IN_ARRAY);
-  mu = (PyArrayObject *) PyArray_FROMANY(omu, NPY_DOUBLE, 1, 1,
-                                              NPY_ARRAY_IN_ARRAY);
-                                              
+  mu = (PyArrayObject *) PyArray_FROMANY(omu, NPY_DOUBLE, 1, 2,
+                                               NPY_ARRAY_INOUT_ARRAY);
   supercell = (PyArrayObject *) PyArray_FROMANY(osupercell, NPY_INT32,
                                                    1, 1, NPY_ARRAY_IN_ARRAY);
   cell = (PyArrayObject *) PyArray_FROMANY(ocell, NPY_DOUBLE, 2, 2,
@@ -177,6 +183,9 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
 
   /* Validate data */
   if (!calc_type || !positions || !FC || !K || !Phi || !mu || !supercell || !cell) {
+    PyErr_Format(PyExc_RuntimeError,
+                    "Error parsing input data. Debug info: %p %p %p %p %p %p %p %p", calc_type,positions,FC,K,Phi,mu,supercell,cell);
+
     Py_XDECREF(positions);
     Py_XDECREF(FC);
     Py_XDECREF(K);
@@ -184,8 +193,6 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     Py_XDECREF(mu);
     Py_XDECREF(supercell);
     Py_XDECREF(cell);
-    PyErr_Format(PyExc_RuntimeError,
-                    "Error parsing numpy arrays.");                 
     return NULL;
   }
 
@@ -196,6 +203,9 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   /* Select calculation type */
   if (strcmp(calc_type, "s")==0 || strcmp(calc_type, "sum")==0) {
     icalc_type = 1;
+    nangles = 1;
+  }  else if (strcmp(calc_type, "rnd")==0 || strcmp(calc_type, "random")==0) {
+    icalc_type = 4;
     nangles = 1;
   }  else if (strcmp(calc_type, "r")==0 || strcmp(calc_type, "rotate")==0) {
     icalc_type = 2;
@@ -210,7 +220,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     Py_DECREF(supercell);
     Py_DECREF(cell);    
     PyErr_Format(PyExc_ValueError,
-                   "Valid calculations are 's', 'r', 'i'.  Unknown value %s", calc_type);
+                   "Valid calculations are 's', 'r', 'i', 'rnd'.  Unknown value %s", calc_type);
     return NULL;
   }
 
@@ -289,6 +299,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   pndims = PyArray_NDIM(positions);
   fcndims = PyArray_NDIM(FC);
   pShape = PyArray_SHAPE(positions);
+  muShape = PyArray_SHAPE(mu);
   fcShape = PyArray_SHAPE(FC);
   /* The first condition is impossible since it is implied by the 
    *  PyArray_FROMANY function above. That function guaranties that the 
@@ -327,7 +338,13 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     return NULL;
   }
   
-  num_atoms = pShape[0]; 
+  /* Get dimension of arrays for muons and atoms */
+  num_atoms = pShape[0];
+  if (PyArray_NDIM(mu) > 1) {
+    num_muons = muShape[0];
+  } else {
+    num_muons = 1;
+  }
   
 
   /* allocate variables needed for simulations */
@@ -336,7 +353,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   in_fc = (double *) malloc(6*num_atoms*sizeof(double));
   in_K = (double *) malloc(3*sizeof(double));
   in_phi = (double *) malloc(num_atoms*sizeof(double));
-  in_muonpos = (double *) malloc(3*sizeof(double));
+  in_muonpos = (double *) malloc(3*num_muons*sizeof(double));
   in_supercell = (int *) malloc(3*sizeof(int));
   in_cell = (double *) malloc(9*sizeof(double));
   
@@ -375,10 +392,22 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
     return NULL;          
   }
   
-  for (i=0; i< num_atoms; i++){
+  for (i=0; i < num_atoms; i++){
     in_positions[3*i+0] = *(npy_float64 *) PyArray_GETPTR2(positions, i,0);
     in_positions[3*i+1] = *(npy_float64 *) PyArray_GETPTR2(positions, i,1);
     in_positions[3*i+2] = *(npy_float64 *) PyArray_GETPTR2(positions, i,2);
+  }
+  /* Can be both 1D and 2D */
+  if (num_muons > 1 ) {
+    for (i=0; i < num_muons; i++){
+      in_muonpos[3*i+0] = *(npy_float64 *) PyArray_GETPTR2(mu, i,0);
+      in_muonpos[3*i+1] = *(npy_float64 *) PyArray_GETPTR2(mu, i,1);
+      in_muonpos[3*i+2] = *(npy_float64 *) PyArray_GETPTR2(mu, i,2);
+    }
+  } else {
+      in_muonpos[0] = *(npy_float64 *) PyArray_GETPTR1(mu, 0);
+      in_muonpos[1] = *(npy_float64 *) PyArray_GETPTR1(mu, 1);
+      in_muonpos[2] = *(npy_float64 *) PyArray_GETPTR1(mu, 2);    
   }
   
   
@@ -404,11 +433,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   for ( i=0; i< num_atoms; i++){
     in_phi[i] = *(npy_float64 *) PyArray_GETPTR1(Phi,i);
   }
-  
-  
-  in_muonpos[0] = *(npy_float64 *) PyArray_GETPTR1(mu,0);
-  in_muonpos[1] = *(npy_float64 *) PyArray_GETPTR1(mu,1);
-  in_muonpos[2] = *(npy_float64 *) PyArray_GETPTR1(mu,2);
+
   
   
   in_supercell[0] = *(npy_int64 *)PyArray_GETPTR1(supercell, 0);
@@ -438,16 +463,18 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
 
   /* allocate output arrays */
   nd = 1;
+  if (num_muons > 1) {nd = nd + 1;}
   if (icalc_type >= 2) {
+    nd = nd + 1;
     /* finish creating return variables */
-    out_dim = (npy_intp *) malloc(2 * sizeof(npy_intp));
-    out_dim[0] = (npy_intp) nangles;
-    out_dim[1] = (npy_intp) 3;
-    nd = 2;
+    out_dim = (npy_intp *) malloc(nd * sizeof(npy_intp));
+    if (num_muons > 1) out_dim[0] = (npy_intp) num_muons;
+    out_dim[nd-2] = (npy_intp) nangles;
+    out_dim[nd-1] = (npy_intp) 3;
   } else {
-    out_dim = (npy_intp *) malloc(1 * sizeof(npy_intp));
-    out_dim[0] = (npy_intp) 3;
-    nd = 1;
+    out_dim = (npy_intp *) malloc(nd * sizeof(npy_intp));
+    if (num_muons > 1) out_dim[0] = (npy_intp) num_muons;
+    out_dim[nd-1] = (npy_intp) 3;
   }
   
   odip = (PyArrayObject *) PyArray_ZEROS(nd, out_dim, NPY_DOUBLE,0);
@@ -493,19 +520,31 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
   {
     case 1:
       SimpleSum(in_positions, in_fc, in_K, in_phi, in_muonpos, in_supercell, 
-        in_cell,r, nnn,rcont,-1., num_atoms,1,cont,dip,lor);
+        in_cell,r, nnn,rcont, ratms, num_atoms,num_muons,cont,dip,lor);
       break;
     case 2:
       RotataSum(in_positions, in_fc, in_K, in_phi, in_muonpos, in_supercell, 
-        in_cell,r, nnn,rcont,num_atoms,in_axis,nangles,cont,dip,lor);
+        in_cell,r, nnn,rcont,num_atoms,num_muons,in_axis,nangles,cont,dip,lor);
       break;
     case 3:
       FastIncommSum(in_positions, in_fc, in_K, in_phi, in_muonpos, in_supercell, 
-        in_cell,r, nnn,rcont,num_atoms,nangles,cont,dip,lor);
+        in_cell,r, nnn,rcont,num_atoms,num_muons,nangles,cont,dip,lor);
+      break;
+    case 4:
+      RandomSample(in_positions, in_fc, in_K, in_phi, in_supercell, in_cell,
+        r, nnn,rcont, ratms, num_atoms, num_muons, in_muonpos, cont,dip,lor);
       break;
   }
   Py_END_ALLOW_THREADS
-
+  
+  if (icalc_type == 4) {
+      if (PyArray_CHKFLAGS(mu, NPY_ARRAY_OWNDATA)) {
+          memcpy(PyArray_DATA(mu), in_muonpos, 3*num_muons*sizeof(double));
+      } else {
+        PyErr_SetString(PyExc_RuntimeError, "muon array does not own data");
+        return NULL; // Nothing deallocated in this case! BAAAD!
+      }
+  }
   if (in_positions != NULL){
       free(in_positions);
       in_positions = NULL;
@@ -642,7 +681,7 @@ static PyObject * py_lfclib_dt(PyObject *self, PyObject *args) {
 
 static PyMethodDef lfclib_methods[] =
 {
-  {"Fields", (PyCFunction)py_lfclib_fields, METH_VARARGS, py_lfclib_fields_docstring},
+  {"Fields", (PyCFunction)py_lfclib_fields, METH_VARARGS | METH_KEYWORDS, py_lfclib_fields_docstring},
   {"DipolarTensor", (PyCFunction)py_lfclib_dt, METH_VARARGS, py_lfclib_dt_docstring},
   {NULL}  /* sentinel */
 };

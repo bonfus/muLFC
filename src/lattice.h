@@ -5,3 +5,4 @@ T GetMinDistanceFromAtoms(const Mat3& lattice, const MatX& atomicPositions, cons
 void Crys2Cart(const Mat3& trmat, const MatX& pos, RefMatX out, bool reverseDirection);
 void recips (const Mat3& lat, RefMatX rec);
 T GetMinDistanceFromAtoms(const Mat3& lattice, const MatX& atomicPositions, const Vec3& intPosition);
+void GetMinDistancesFromAtoms(const Mat3& lattice, const MatX& atomicPositions, const MatX& intPositionFrac, RefVecX distances);

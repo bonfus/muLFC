@@ -17,7 +17,10 @@ sources = ['simplesum.cc', \
            'rotatesum.cc', \
            'fastincommsum.cc', \
            'dipolartensor.cc', \
+           'randomsample.cc', \
            'pile.cc', \
+           'parsers.cc', \
+           'randomness.cc', \
            'lattice.cc']
 
 src_sources = []

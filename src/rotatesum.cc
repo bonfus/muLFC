@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <math.h>
+#include "parsers.h"
 #include "dipolesum.h"
 #include "config.h"
 
@@ -49,6 +50,7 @@ extern "C" {
  *                      the contact field. This option is redundant but speeds
  *                      up the evaluation significantly
  * @param in_natoms: number of atoms in the lattice.
+ * @param in_natoms: number of muon sites.
  * @param in_axis: axis for the rotation
  * @param in_nangles: the code will perform in_nangles rotations of 360 deg/in_nangles
  * @param out_field_cont Contact filed in Cartesian coordinates defined by in_cell. A coupling of 1 \f$ \mathrm{Ang} ^{-1} \sim 13.912~\mathrm{mol/emu} \f$ is assumed.
@@ -59,7 +61,7 @@ void RotataSum(const double *in_positions,
           const double *in_fc, const double *in_K, const double *in_phi,
           const double *in_muonpos, const int * in_supercell, const double *in_cell, 
           const double radius, const unsigned int nnn_for_cont, const double cont_radius, 
-          unsigned int in_natoms, 
+          const unsigned int in_natoms, const unsigned int in_nmuonpos,
           const double *in_axis, unsigned int in_nangles,
           double *out_field_cont, double *out_field_dip, double *out_field_lor)
 {
@@ -67,6 +69,7 @@ void RotataSum(const double *in_positions,
     unsigned int scx, scy, scz; /*supercell sizes */
 
     MatX atomicPos(3,in_natoms) ;
+    MatX MagAtomicPos(3,in_natoms) ;
     Vec3 muonPos;
     Mat3 lattice;
     Mat3 rmat;
@@ -79,7 +82,8 @@ void RotataSum(const double *in_positions,
     CMatX FC(3,in_natoms);
     Vec3 K;
     MatX B, BLor, BCont;       
-    unsigned int a, angn;     /* counter for atoms */    
+    unsigned int mu, a, angn;     /* counters */    
+    int mag_atoms;
     
     MatX tr_mat(3, 3*in_nangles);
     
@@ -111,18 +115,15 @@ void RotataSum(const double *in_positions,
     printf("Radius is: %e\n",radius);
 #endif
     
-    
-    /* muon position in reduced coordinates */
-    muonPos.x() =  in_muonpos[0];
-    muonPos.y() =  in_muonpos[1];
-    muonPos.z() =  in_muonpos[2];
 
-    for (a = 0; a < in_natoms; a++)
-    {
-        FC.col(a).real() << in_fc[6*a] , in_fc[6*a+2] , in_fc[6*a+4];
-        FC.col(a).imag() << in_fc[6*a+1] , in_fc[6*a+3] , in_fc[6*a+5];
-        atomicPos.col(a) << in_positions[3*a] , in_positions[3*a+1] , in_positions[3*a+2] ;
-        phi(a) = in_phi[a];
+    mag_atoms = ParseAndFilterMagneticAtoms(in_positions, in_fc, in_phi, in_natoms, 
+                                  atomicPos, MagAtomicPos, FC, phi);
+
+    
+    if (mag_atoms > 0 ) {
+        phi.conservativeResize(mag_atoms);
+        FC.conservativeResize(3, mag_atoms);
+        MagAtomicPos.conservativeResize(3, mag_atoms);
     }
 
     B.resize(3, in_nangles);
@@ -142,30 +143,40 @@ void RotataSum(const double *in_positions,
         tr_mat.block(0, angn*3, 3, 3) = rmat;
     }
     
-    
-    
-    TransformAndSum(atomicPos, 
-          FC, K, phi,
-          muonPos, scx, scy, scz,
-          lattice, radius, nnn_for_cont, cont_radius, tr_mat,
-          BCont, B, BLor);
-
-    for (angn = 0; angn < in_nangles; ++angn)
+    for (mu = 0; mu < in_nmuonpos; mu++)
     {
+    
+        /* muon position in reduced coordinates */
+        muonPos.x() =  in_muonpos[3*mu+0];
+        muonPos.y() =  in_muonpos[3*mu+1];
+        muonPos.z() =  in_muonpos[3*mu+2];
         
-        out_field_lor[3*angn+0] = BLor.col(angn).x();
-        out_field_lor[3*angn+1] = BLor.col(angn).y();
-        out_field_lor[3*angn+2] = BLor.col(angn).z();
-        //
-        out_field_dip[3*angn+0] = B.col(angn).x();
-        out_field_dip[3*angn+1] = B.col(angn).y();
-        out_field_dip[3*angn+2] = B.col(angn).z();
-        // 
-        out_field_cont[3*angn+0] = BCont.col(angn).x();
-        out_field_cont[3*angn+1] = BCont.col(angn).y();
-        out_field_cont[3*angn+2] = BCont.col(angn).z(); 
+        BCont.setZero(); B.setZero(); BLor.setZero();
+        
+        TransformAndSum(MagAtomicPos, 
+              FC, K, phi,
+              muonPos, scx, scy, scz,
+              lattice, radius, nnn_for_cont, cont_radius, tr_mat,
+              BCont, B, BLor);
+    
+        a = 3*mu*in_nangles;
+        for (angn = 0; angn < in_nangles; ++angn)
+        {
+            
+            out_field_lor[a+0] = BLor.col(angn).x();
+            out_field_lor[a+1] = BLor.col(angn).y();
+            out_field_lor[a+2] = BLor.col(angn).z();
+            //
+            out_field_dip[a+0] = B.col(angn).x();
+            out_field_dip[a+1] = B.col(angn).y();
+            out_field_dip[a+2] = B.col(angn).z();
+            // 
+            out_field_cont[a+0] = BCont.col(angn).x();
+            out_field_cont[a+1] = BCont.col(angn).y();
+            out_field_cont[a+2] = BCont.col(angn).z(); 
+            a = a + 3;
+        }
     }
-
 }
 
 }

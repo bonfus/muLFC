@@ -321,6 +321,74 @@ class TestLFCExtension(unittest.TestCase):
         #
         np.testing.assert_array_almost_equal(c, np.array([0,0,7.769376]))
         
+    def test_random_positions(self):
+        p  = np.array([[0.,0.,0.]])
+        fc = np.array([[0.,0.,1.]],dtype=np.complex)
+        k  = np.array([0.,0.,0.5])
+        
+        phi= np.array([0.,])
+        
+        mu = np.random.random_sample([30,3]).astype(np.float64)
+        
+        sc = np.array([10,10,10],dtype=np.int32)
+        latpar = np.diag([2.,2.,2.])
+        
+        r = 10.
+        nnn = 2
+        rc=10.
+        
+        #### simple tests with phase
+        c,d,l = lfclib.Fields('rnd', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,dist_from_atoms=1.)
+        sc,sd,sl = lfclib.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,dist_from_atoms=1.)
+        #np.testing.assert_array_almost_equal(c, sc.reshape(c.shape))
+        #np.testing.assert_array_almost_equal(d, sd.reshape(d.shape))
+        np.testing.assert_array_almost_equal(l, sl.reshape(l.shape))
+
+
+    def test_multiple_muons(self):
+        p  = np.array([[0.,0.,0.]])
+        fc = np.array([[0.,1.j,1.]],dtype=np.complex)
+        k  = np.array([0.,0.,0.6])
+        ax  = np.array([0.,1.,0.0])
+        phi= np.array([0.,])
+        
+        mu = np.random.random_sample([30,3]).astype(np.float64)
+        
+        scell = np.array([10,10,10],dtype=np.int32)
+        latpar = np.diag([2.,2.,2.])
+        
+        r = 10.
+        nnn = 2
+        rc=10.
+        
+        #### simple to check data is consistent across single and many muons
+        ####  versions
+        mc,md,ml = lfclib.Fields('s', p,fc,k,phi,mu,scell,latpar,r,nnn,rc)
+        i=0
+        for m in mu:
+          sc,sd,sl = lfclib.Fields('s', p,fc,k,phi,m,scell,latpar,r,nnn,rc)
+          np.testing.assert_array_almost_equal(mc[i], sc)
+          np.testing.assert_array_almost_equal(md[i], sd)
+          np.testing.assert_array_almost_equal(ml[i], sl)
+          i+=1
+
+        mc,md,ml = lfclib.Fields('r', p,fc,k,phi,mu,scell,latpar,r,nnn,rc,12,ax)
+        i=0
+        for m in mu:
+          sc,sd,sl = lfclib.Fields('r', p,fc,k,phi,m,scell,latpar,r,nnn,rc,12,ax)
+          np.testing.assert_array_almost_equal(mc[i], sc)
+          np.testing.assert_array_almost_equal(md[i], sd)
+          np.testing.assert_array_almost_equal(ml[i], sl)
+          i+=1
+
+        mc,md,ml = lfclib.Fields('i', p,fc,k,phi,mu,scell,latpar,r,nnn,rc,8)
+        i=0
+        for m in mu:
+          sc,sd,sl = lfclib.Fields('i', p,fc,k,phi,m,scell,latpar,r,nnn,rc,8)
+          np.testing.assert_array_almost_equal(mc[i], sc)
+          np.testing.assert_array_almost_equal(md[i], sd)
+          np.testing.assert_array_almost_equal(ml[i], sl)
+          i+=1
 
     
     def test_dipolar_tensor(self):

@@ -1,5 +1,5 @@
 /**
- * @file simplesum.cc
+ * @file randomsample.cc
  * @author Pietro Bonfa
  * @date 18 March 2018
  * @brief Dipolar field calculator
@@ -20,12 +20,14 @@
 #include "config.h"
 #include "lattice.h"
 #include "dipolesum.h"
+#include "randomness.h"
 #include "parsers.h"
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846
 #endif
- 
+
+#define BUFFER_SIZE 1000
 
 extern "C" {
 
@@ -43,7 +45,6 @@ extern "C" {
  *              defined by in_cell.
  * @param in_K the propagation vector in *reciprocal lattice units*.
  * @param in_phi the phase for each of the atoms given in in_positions.
- * @param in_muonpos position of the muon in fractional coordinates
  * @param in_supercell extension of the supercell along the lattice vectors.
  * @param in_cell lattice cell. The three lattice vectors should be entered 
  *         with the following order: a_x, a_y, a_z, b_z, b_y, b_z, c_x, c_y, c_z.
@@ -54,31 +55,33 @@ extern "C" {
  *                      the contact field. This option is redundant but speeds
  *                      up the evaluation significantly
  * @param min_radius_from_atoms: minimal distance from atoms reported in in_positions.
- *                      When the distance from an atom of the system is smaller than required, 
- *                      NaN is returned.
  * @param in_natoms: number of atoms in the lattice.
- * @param in_nmounpos: input, number of muon positions to be evaluated.
+ * @param in_nmounpos: input, number of muon pos to be evaluated.
+ * @param out_muonpos: positions of the muon in fractional coordinates.
  * @param out_field_cont Contact filed in Tesla in the Cartesian coordinates system defined by in_cell. A coupling of 1 \f$ \mathrm{Ang} ^{-1} \sim 13.912~\mathrm{mol/emu} \f$ is assumed.
  * @param out_field_dip  Dipolar field in Tesla in the Cartesian coordinates system defined by in_cell.
  * @param out_field_lor  Lorentz field in Tesla in the Cartesian coordinates system defined by in_cell.
  */
 
 
-void  SimpleSum(const T *in_positions, 
+void  RandomSample(const T *in_positions, 
           const T *in_fc, const T *in_K, const T *in_phi,
-          const T *in_muonpos, const int * in_supercell, const T *in_cell, 
+          const int * in_supercell, const T *in_cell, 
           const T radius, const unsigned int nnn_for_cont, const T cont_radius,
           const T min_radius_from_atoms, 
           const unsigned int in_natoms, unsigned int in_nmounpos,
-          T *out_field_cont, T *out_field_dip, T *out_field_lor)
+          T* out_muonpos, T *out_field_cont, T *out_field_dip, T *out_field_lor)
 {
 
     unsigned int scx, scy, scz; /*supercell sizes */
     
     MatX atomicPos(3,in_natoms) ;
     MatX MagAtomicPos(3,in_natoms) ;
+    MatX muonPositions(3, in_nmounpos);
+    
     Vec3 muonPos;
     Mat3 lattice;
+    Vec3 boxOShift;
     
     
     /* description of the magnetic structure. */
@@ -87,10 +90,10 @@ void  SimpleSum(const T *in_positions,
     CVec3 AtomFC;
     CMatX FC(3,in_natoms);
     Vec3 K;
-    Vec3 B, BLor, BCont;       
+    MatX B, BLor, BCont;       
     unsigned int a, imu;     /* counter for atoms */
     int mag_atoms;
-    T r;
+    T r, boxEdge;
     
     /* define dupercell size */
     scx = in_supercell[0];
@@ -115,66 +118,96 @@ void  SimpleSum(const T *in_positions,
     std::cout << K.transpose() << std::endl;
     printf("Radius is: %e\n",radius);
 #endif
-    
-    /* Filter out non magnetic atoms, according to EPS value in config.h */
+
+    if (min_radius_from_atoms < 0.) {
+        printf("Min radius from atom is less than zero!\n");
+    }
+    printf("Min radius from atoms %f \n", min_radius_from_atoms);
     mag_atoms = ParseAndFilterMagneticAtoms(in_positions, in_fc, in_phi, in_natoms, 
                                   atomicPos, MagAtomicPos, FC, phi);
+
+    
     if (mag_atoms > 0 ) {
         phi.conservativeResize(mag_atoms);
         FC.conservativeResize(3, mag_atoms);
         MagAtomicPos.conservativeResize(3, mag_atoms);
     }
-    /* End of atom filtering */
-
-    for (imu = 0; imu < in_nmounpos; imu++) {
     
-        /* muon position in reduced coordinates */
-        muonPos.x() =  in_muonpos[imu*3 + 0];
-        muonPos.y() =  in_muonpos[imu*3 + 1];
-        muonPos.z() =  in_muonpos[imu*3 + 2];
-        
-        /* check distance from atoms is fine */
-        if (min_radius_from_atoms > 0.) {
-            r = GetMinDistanceFromAtoms(lattice, atomicPos, muonPos);
-            if (r < min_radius_from_atoms) {
-                out_field_lor[imu*3+0] = NAN;
-                out_field_lor[imu*3+1] = NAN;
-                out_field_lor[imu*3+2] = NAN;
-                out_field_cont[imu*3+0] = NAN;
-                out_field_cont[imu*3+1] = NAN;
-                out_field_cont[imu*3+2] = NAN;
-                out_field_dip[imu*3+0] = NAN;
-                out_field_dip[imu*3+1] = NAN;
-                out_field_dip[imu*3+2] = NAN;
-                continue;
+    UniformRandomInsideUnitCell RndGenerator (lattice, BUFFER_SIZE);
+
+    //std::cout << "Box info " << boxEdge << " - " << boxOShift.transpose() << std::endl;
+    /* Generate random positions */
+    MatX PositionBuffer(3, BUFFER_SIZE);
+    VecX distances(BUFFER_SIZE);
+    int filled=0;
+    
+    while(filled < in_nmounpos) {
+        for (int i=0; i < BUFFER_SIZE; i++) {
+            RndGenerator.GetRandomPos(muonPos);
+            PositionBuffer.col(i) = muonPos;
+        }
+        GetMinDistancesFromAtoms(lattice, atomicPos, PositionBuffer, distances);
+        for (int i=0; (i < BUFFER_SIZE) && (filled < in_nmounpos); i++) {
+            if (distances(i) > min_radius_from_atoms) {
+                out_muonpos[filled*3+0] = PositionBuffer.col(i).x();
+                out_muonpos[filled*3+1] = PositionBuffer.col(i).y();
+                out_muonpos[filled*3+2] = PositionBuffer.col(i).z();
+                muonPositions.col(filled) = PositionBuffer.col(i);
+                filled++;
             }
         }
-        
-         
-        BCont.setZero(); B.setZero(); BLor.setZero();
-        
-        if (mag_atoms > 0) {
-            DipoleSum(MagAtomicPos, 
-              FC, K, phi,
-              muonPos, scx, scy, scz,
-              lattice, radius, nnn_for_cont, cont_radius,
-              BCont, B, BLor);
-        }
+    }
+    
+    //for (imu = 0; imu < in_nmounpos; imu++) {    
+    //    while(true) {  // Add safe limit to avoid infite loops
+    //        
+    //        RndGenerator.GetRandomPos(muonPos);
+    //        //std::cout << "Trying: " << muonPos.transpose() << std::endl;
+    //        /* check distance from atoms is fine */
+    //        // r = GetMinDistanceFromAtoms(lattice, atomicPos, muonPos);
+    //        GetMinDistancesFromAtoms(lattice, atomicPos, muonPos, dists);
+    //        //std::cout << "Accept if: " << r << " > " << min_radius_from_atoms << std::endl;
+    //        if (r > min_radius_from_atoms) {
+    //            out_muonpos[imu*3+0] = muonPos.x();
+    //            out_muonpos[imu*3+1] = muonPos.y();
+    //            out_muonpos[imu*3+2] = muonPos.z();
+    //            muonPositions.col(imu) = muonPos;
+    //            break;
+    //        }
+    //    }
+    //}
+    //std::cout << "Muon pos " << in_nmounpos << " " << muonPositions.transpose() << std::endl;
+
+    B.resize(3, in_nmounpos); 
+    BCont.resize(3, in_nmounpos); 
+    BLor.resize(3, in_nmounpos); 
+
+    BCont.setZero(); B.setZero(); BLor.setZero();
+
+    if (mag_atoms > 0) {
+        DipoleSumMany(MagAtomicPos, 
+          FC, K, phi,
+          muonPositions, scx, scy, scz,
+          lattice, radius, nnn_for_cont, cont_radius,
+          BCont, B, BLor);
+    }
     
     
-        out_field_lor[imu*3+0] = BLor.x();
-        out_field_lor[imu*3+1] = BLor.y();
-        out_field_lor[imu*3+2] = BLor.z();
-
-
-        out_field_cont[imu*3+0] = BCont.x();
-        out_field_cont[imu*3+1] = BCont.y();
-        out_field_cont[imu*3+2] = BCont.z();
-
-
-        out_field_dip[imu*3+0] = B.x();
-        out_field_dip[imu*3+1] = B.y();
-        out_field_dip[imu*3+2] = B.z();
+    for (imu = 0; imu < in_nmounpos; imu++) {
+    
+        out_field_lor[imu*3+0] = BLor.col(imu).x();
+        out_field_lor[imu*3+1] = BLor.col(imu).y();
+        out_field_lor[imu*3+2] = BLor.col(imu).z();
+        
+        
+        out_field_cont[imu*3+0] = BCont.col(imu).x();
+        out_field_cont[imu*3+1] = BCont.col(imu).y();
+        out_field_cont[imu*3+2] = BCont.col(imu).z();
+        
+    
+        out_field_dip[imu*3+0] = B.col(imu).x();
+        out_field_dip[imu*3+1] = B.col(imu).y();
+        out_field_dip[imu*3+2] = B.col(imu).z();
     }
 
 }

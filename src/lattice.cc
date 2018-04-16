@@ -78,9 +78,9 @@ T GetMinDistanceFromAtoms(const Mat3& lattice, const MatX& atomicPositions, cons
                     
                     // apos in Cart coordinates
                     Crys2Cart(scLattice, apos_aux, vauxCart, false);
-                    std::cout << vauxCart.transpose() << "-" <<  intPositionCart.transpose() << std::endl;
+                    //std::cout << vauxCart.transpose() << "-" <<  intPositionCart.transpose() << std::endl;
                     vauxCart = vauxCart - intPositionCart;
-                    std::cout << "norm: " << vauxCart.norm() << std::endl;
+                    //std::cout << "norm: " << vauxCart.norm() << std::endl;
                     nrm = std::min(vauxCart.norm(), nrm);
                     
                 }
@@ -88,6 +88,66 @@ T GetMinDistanceFromAtoms(const Mat3& lattice, const MatX& atomicPositions, cons
         }
     }
     return nrm;
+}
+
+void GetMinDistancesFromAtoms(const Mat3& lattice, const MatX& atomicPositions, const MatX& intPositionFrac, RefVecX distances)
+{
+    Mat3 scLattice;
+    Mat3 aux;
+    MatX intPositionSCFrac;
+    MatX intPositionSCCart;
+    Vec3 vaux;
+    Vec3 vauxCart;
+    MatX atomicPosSCFrac;
+    MatX atomicPosSCCart;
+    Mat3 sctmp;
+    int idx=0;
+    sctmp << (T) 3,     0,     0, 
+                 0, (T) 3,     0,
+                 0,     0, (T) 3;
+    
+    double nrm;
+    int natoms = atomicPositions.cols();
+    int npositions = intPositionFrac.cols();
+    
+    atomicPosSCFrac.resize(3, 3*3*3*natoms);
+    atomicPosSCCart.resize(3, 3*3*3*natoms);
+    intPositionSCFrac.resize(3, npositions);
+    intPositionSCCart.resize(3, npositions);
+    
+    scLattice = lattice*sctmp;
+
+    // lattice scaled by 3 in all directions
+    intPositionSCFrac = intPositionFrac/3. + 0.3333333333*MatX::Ones(3, npositions);
+    
+    // pos in cartesian coordinates
+    Crys2Cart(scLattice, intPositionSCFrac, intPositionSCCart, false);
+    
+    // scale lattice coordinates by 3
+    idx = 0;
+    for (int i=0; i < 3; i ++) {
+        for (int j=0; j < 3; j ++) {
+            for (int k=0; k < 3; k ++) {
+                vaux << ((T) i)/3. ,((T) j)/3. ,((T) k)/3.;
+                for (int l=0; l < natoms; l++) {
+                    atomicPosSCFrac.col(idx) = atomicPositions.col(l)/3. + vaux;
+                    idx++;
+                }
+            }
+        }
+    }
+                
+    // apos in Cart coordinates
+    Crys2Cart(scLattice, atomicPosSCFrac, atomicPosSCCart, false);
+    
+    for (int i=0; i < intPositionSCCart.cols(); i ++) {
+        nrm = std::numeric_limits<double>::max();
+        for (int l=0; l < atomicPosSCCart.cols(); l++) {
+            vauxCart = atomicPosSCCart.col(l) - intPositionSCCart.col(i);
+            nrm = std::min(vauxCart.norm(), nrm);
+        }
+        distances(i) = nrm;
+    }
 }
 
 #ifdef __TEST
@@ -99,6 +159,7 @@ int main()
   MatX a(3,24);
   MatX aux(3,24);
   Vec3 p;
+  MatX manyp(3,4);
   
   // Troilite
   m = Mat3::Zero();
@@ -156,5 +217,19 @@ int main()
     std::cout << a.col(i).transpose() << std::endl;
   }
   std::cout << "Min distance: " << GetMinDistanceFromAtoms(m,a,p) << std::endl;
+  
+  VecX dists(4);
+  
+  manyp.col(0) << 0.5, 0.5, 0.5;
+  manyp.col(1) << 0.5, 0.5, 0.5;
+  manyp.col(2) << 0.5, 0.5, 0.5;
+  manyp.col(3) << 0.5, 0.5, 0.5;
+  
+  GetMinDistancesFromAtoms(m,a,manyp, dists);
+  
+  std::cout << "Min distance many: " << dists.transpose() << std::endl;
+  
+  
+  
 }
 #endif
