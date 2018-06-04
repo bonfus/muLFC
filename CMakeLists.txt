@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.0)
 
 project (LFC)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED OFF)
+
+include(cxx)
 
 OPTION (USE_OpenMP "Use OpenMP" OFF)
 IF(USE_OpenMP)
@@ -13,3 +19,8 @@ IF(USE_OpenMP)
 ENDIF()
 
 add_subdirectory (src)
+
+# testing
+add_subdirectory (test)
+enable_testing ()
+add_test (NAME Test1 COMMAND Test)

@@ -54,7 +54,7 @@ extern "C" {
  * @param cont_radius only atoms within this radius are eligible to contribute to
  *                      the contact field. This option is redundant but speeds
  *                      up the evaluation significantly
- * @param min_radius_from_atoms: minimal distance from atoms reported in in_positions.
+ * @param in_constraints: minimum and maximum distance from aech atom reported in in_positions.
  * @param in_natoms: number of atoms in the lattice.
  * @param in_nmounpos: input, number of muon pos to be evaluated.
  * @param out_muonpos: positions of the muon in fractional coordinates.
@@ -68,14 +68,16 @@ void  RandomSample(const T *in_positions,
           const T *in_fc, const T *in_K, const T *in_phi,
           const int * in_supercell, const T *in_cell, 
           const T radius, const unsigned int nnn_for_cont, const T cont_radius,
-          const T min_radius_from_atoms, 
-          const unsigned int in_natoms, unsigned int in_nmounpos,
+          const unsigned int in_natoms, const unsigned int in_nmounpos,
+          const T *in_constraints, const int * in_constraint_active, 
+          const unsigned int in_nconstraints,
           T* out_muonpos, T *out_field_cont, T *out_field_dip, T *out_field_lor)
 {
 
     unsigned int scx, scy, scz; /*supercell sizes */
-    
-    MatX atomicPos(3,in_natoms) ;
+    MatX atomicPos(3,in_natoms);
+    MatX constraints(2,in_nconstraints);
+    IMatX constraint_group(in_natoms, in_nconstraints);
     MatX MagAtomicPos(3,in_natoms) ;
     MatX muonPositions(3, in_nmounpos);
     
@@ -119,10 +121,15 @@ void  RandomSample(const T *in_positions,
     printf("Radius is: %e\n",radius);
 #endif
 
-    if (min_radius_from_atoms < 0.) {
-        printf("Min radius from atom is less than zero!\n");
+    // parse constraints
+    for (int i=0; i < in_nconstraints; i++) {
+        for (int j=0; j< in_natoms; j++) {
+            constraint_group(j,i) = in_constraint_active[i*in_natoms + j];
+        }
+        constraints.col(i).x() = in_constraints[i*2];
+        constraints.col(i).y() = in_constraints[i*2+1];
     }
-    printf("Min radius from atoms %f \n", min_radius_from_atoms);
+
     mag_atoms = ParseAndFilterMagneticAtoms(in_positions, in_fc, in_phi, in_natoms, 
                                   atomicPos, MagAtomicPos, FC, phi);
 
@@ -132,13 +139,14 @@ void  RandomSample(const T *in_positions,
         FC.conservativeResize(3, mag_atoms);
         MagAtomicPos.conservativeResize(3, mag_atoms);
     }
-    
+    DistanceCalc DC(lattice, atomicPos);
     UniformRandomInsideUnitCell RndGenerator (lattice, BUFFER_SIZE);
 
     //std::cout << "Box info " << boxEdge << " - " << boxOShift.transpose() << std::endl;
     /* Generate random positions */
     MatX PositionBuffer(3, BUFFER_SIZE);
     VecX distances(BUFFER_SIZE);
+    IVecX valid(BUFFER_SIZE);
     int filled=0;
     
     while(filled < in_nmounpos) {
@@ -146,9 +154,16 @@ void  RandomSample(const T *in_positions,
             RndGenerator.GetRandomPos(muonPos);
             PositionBuffer.col(i) = muonPos;
         }
-        GetMinDistancesFromAtoms(lattice, atomicPos, PositionBuffer, distances);
+        valid.setOnes();
+        for (int j=0; j < in_nconstraints; j++) {
+            DC.GetMinDistancesFromAtoms(constraint_group.col(j), PositionBuffer, distances);
+            for (int i=0; (i < BUFFER_SIZE); i++) {
+                if (distances(i) < constraints.col(j).x() ||
+                    distances(i) >= constraints.col(j).y()) valid(i) = 0;
+            }
+        }
         for (int i=0; (i < BUFFER_SIZE) && (filled < in_nmounpos); i++) {
-            if (distances(i) > min_radius_from_atoms) {
+            if (valid(i) == 1) {
                 out_muonpos[filled*3+0] = PositionBuffer.col(i).x();
                 out_muonpos[filled*3+1] = PositionBuffer.col(i).y();
                 out_muonpos[filled*3+2] = PositionBuffer.col(i).z();
@@ -157,26 +172,7 @@ void  RandomSample(const T *in_positions,
             }
         }
     }
-    
-    //for (imu = 0; imu < in_nmounpos; imu++) {    
-    //    while(true) {  // Add safe limit to avoid infite loops
-    //        
-    //        RndGenerator.GetRandomPos(muonPos);
-    //        //std::cout << "Trying: " << muonPos.transpose() << std::endl;
-    //        /* check distance from atoms is fine */
-    //        // r = GetMinDistanceFromAtoms(lattice, atomicPos, muonPos);
-    //        GetMinDistancesFromAtoms(lattice, atomicPos, muonPos, dists);
-    //        //std::cout << "Accept if: " << r << " > " << min_radius_from_atoms << std::endl;
-    //        if (r > min_radius_from_atoms) {
-    //            out_muonpos[imu*3+0] = muonPos.x();
-    //            out_muonpos[imu*3+1] = muonPos.y();
-    //            out_muonpos[imu*3+2] = muonPos.z();
-    //            muonPositions.col(imu) = muonPos;
-    //            break;
-    //        }
-    //    }
-    //}
-    //std::cout << "Muon pos " << in_nmounpos << " " << muonPositions.transpose() << std::endl;
+
 
     B.resize(3, in_nmounpos); 
     BCont.resize(3, in_nmounpos); 

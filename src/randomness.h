@@ -22,7 +22,7 @@ class UniformRandomInsideUnitCell {
   private:
     void AllocateRandomPoints();              // add k to the end of the list
     Mat3 lattice;
-    T boxSize;
+    T _boxSize;
     Vec3 boxOrigShift;
     MatX _buffer;
     int _buff_idx;

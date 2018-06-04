@@ -322,12 +322,13 @@ class TestLFCExtension(unittest.TestCase):
         np.testing.assert_array_almost_equal(c, np.array([0,0,7.769376]))
         
     def test_random_positions(self):
-        p  = np.array([[0.,0.,0.]])
-        fc = np.array([[0.,0.,1.]],dtype=np.complex)
+        p  = np.array([[0.,0.,0.], [0.5,0.5,0.5] , [0.5,0.5,0.0]])
+        fc = np.array([[0.,0.,1.], [0.,0.,1.], [0.,0.,1.]],dtype=np.complex)
         k  = np.array([0.,0.,0.5])
         
-        phi= np.array([0.,])
+        phi= np.array([0.,0., 0.])
         
+        # This is useless...
         mu = np.random.random_sample([30,3]).astype(np.float64)
         
         sc = np.array([10,10,10],dtype=np.int32)
@@ -337,8 +338,11 @@ class TestLFCExtension(unittest.TestCase):
         nnn = 2
         rc=10.
         
+        constr = np.array([[1.0, 100.0]])
+        constr_grp = np.array([[1,1,1]],dtype=np.int32)
+        
         #### simple tests with phase
-        c,d,l = lfclib.Fields('rnd', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,dist_from_atoms=1.)
+        c,d,l = lfclib.Fields('rnd', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,constraints=constr, constraint_group=constr_grp)
         sc,sd,sl = lfclib.Fields('s', p,fc,k,phi,mu,sc,latpar,r,nnn,rc,dist_from_atoms=1.)
         #np.testing.assert_array_almost_equal(c, sc.reshape(c.shape))
         #np.testing.assert_array_almost_equal(d, sd.reshape(d.shape))

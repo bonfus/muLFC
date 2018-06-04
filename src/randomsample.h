@@ -14,13 +14,14 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-void  RandomSample(const T *in_positions, 
-          const T *in_fc, const T *in_K, const T *in_phi,
-          const int * in_supercell, const T *in_cell, 
-          const T radius, const unsigned int nnn_for_cont, const T cont_radius,
-          const T min_radius_from_atoms, 
-          const unsigned int in_natoms, unsigned int in_nmounpos,
-          T* out_muonpos, T *out_field_cont, T *out_field_dip, T *out_field_lor);
+void  RandomSample(const double *in_positions, 
+          const double *in_fc, const double *in_K, const double *in_phi,
+          const int * in_supercell, const double *in_cell, 
+          const double radius, const unsigned int nnn_for_cont, const double cont_radius,
+          const unsigned int in_natoms, const unsigned int in_nmounpos,
+          const double *in_constraints, const int * in_constraint_active, 
+          const unsigned int in_nconstraints,
+          double* out_muonpos, double *out_field_cont, double *out_field_dip, double *out_field_lor);
 
 #ifdef __cplusplus
 } /* extern "C" */

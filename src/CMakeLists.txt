@@ -2,8 +2,13 @@
 set (sources simplesum.cc lattice.cc pile.cc dipolesum.cc fastincommsum.cc rotatesum.cc randomsample.cc dipolartensor.cc parsers.cc randomness.cc)
 set (devel-headers simplesum.h fastincommsum.h rotatesum.h dipolartensor.h config.h)
 
-#Eigen
+# find Eigen library
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+
+# set c++11 rnd features if available
+if ( HAVE_CXX11RANDOM )
+  add_definitions( -DCXX11RANDOM )
+endif()
 
 # library version
 set(LFClib_VERSION_MAJOR 0)

@@ -126,6 +126,8 @@ void  SimpleSum(const T *in_positions,
     }
     /* End of atom filtering */
 
+    DistanceCalc DC(lattice, atomicPos);
+
     for (imu = 0; imu < in_nmounpos; imu++) {
     
         /* muon position in reduced coordinates */
@@ -135,7 +137,7 @@ void  SimpleSum(const T *in_positions,
         
         /* check distance from atoms is fine */
         if (min_radius_from_atoms > 0.) {
-            r = GetMinDistanceFromAtoms(lattice, atomicPos, muonPos);
+            r = DC.GetMinDistanceFromAtoms(muonPos);
             if (r < min_radius_from_atoms) {
                 out_field_lor[imu*3+0] = NAN;
                 out_field_lor[imu*3+1] = NAN;

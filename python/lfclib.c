@@ -14,6 +14,7 @@
 #include "fastincommsum.h"
 #include "rotatesum.h"
 #include "simplesum.h"
+#include "randomsample.h"
 
 /* support numpy 1.6 - this macro got renamed and deprecated at once in 1.7 */
 #ifndef NPY_ARRAY_IN_ARRAY
@@ -113,14 +114,19 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwa
   PyObject *opositions, *oFC, *oK, *oPhi;
   PyObject *omu, *osupercell, *ocell;
   PyObject *orot_axis = NULL;
+  PyObject *oconstraints = NULL;
+  PyObject *oconstraint_group = NULL;
   
   PyArrayObject *positions, *FC, *K, *Phi;
   PyArrayObject *mu, *supercell, *cell;
   PyArrayObject *rot_axis = NULL;
+  PyArrayObject *constraints = NULL;
+  PyArrayObject *constraint_group = NULL;
 
   /* local variables */
   int num_atoms=0;
   int num_muons=0;
+  int num_constraints=0;
   int icalc_type=0;
   
   
@@ -132,6 +138,8 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwa
   int * in_supercell=NULL;
   double * in_cell=NULL;
   double * in_axis = NULL;
+  double * in_constraints = NULL;
+  int * in_constraint_group = NULL;
 
   /* return variables */
   double * dip=NULL, *cont=NULL, *lor=NULL;
@@ -146,22 +154,26 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwa
   npy_intp * muShape=NULL; 
   npy_intp * fcShape=NULL; 
   npy_intp * phiSpahe=NULL; 
+  npy_intp * constraintsShape=NULL; 
 
-  int i;
+  int i, j;
   int nd = 1;
   npy_cdouble v;
   static char *kwlist[] = {"ctype", "positions", "FC", "K", 
                             "phi", "muon", "supercell", "cell",
-                            "r", "nnn", "rcont", "nangles", "axis", "dist_from_atoms", NULL};
+                            "r", "nnn", "rcont", "nangles", "axis",
+                            "constraints", "constraint_group", "dist_from_atoms", NULL};
   
   /* put arguments into variables */
   // if (!PyArg_ParseTuple(args, "sOOOOOOOdId|IO", &calc_type, 
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sOOOOOOOdId|IOd", kwlist,
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sOOOOOOOdId|IOOOd", kwlist,
                                         &calc_type, 
                                         &opositions, &oFC, &oK, &oPhi,
                                         &omu, &osupercell, &ocell,
                                         &r,&nnn,&rcont,
-                                        &nangles,&orot_axis, &ratms)) {
+                                        &nangles, &orot_axis,
+                                        &oconstraints, &oconstraint_group,
+                                        &ratms)) {
     return NULL;
   }
   
@@ -225,7 +237,7 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwa
   }
 
   /* Check optional arguments are present for calculation 'i' or 'r' */
-  if (icalc_type >= 2) {
+  if ( icalc_type == 2 || icalc_type == 3 ) {
       if(nangles==0) {
         Py_DECREF(positions);
         Py_DECREF(FC);
@@ -254,6 +266,22 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwa
       PyErr_Format(PyExc_ValueError,
                     "Axis for rotation required!");
       return NULL;        
+    }
+  }
+
+  /* Check optional arguments are present for calculation 'rnd' */
+  if (icalc_type == 4) {
+    if ((!oconstraints) || (!oconstraint_group)) {
+      Py_DECREF(positions);
+      Py_DECREF(FC);
+      Py_DECREF(K);
+      Py_DECREF(Phi);
+      Py_DECREF(mu);
+      Py_DECREF(supercell);
+      Py_DECREF(cell);
+      PyErr_Format(PyExc_ValueError,
+                    "Constraints and constraint_group for Random Sample required!");
+      return NULL;
     }
   }
 
@@ -345,7 +373,40 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwa
   } else {
     num_muons = 1;
   }
-  
+
+  /* Parse optional argument for 'rnd' */
+  if (icalc_type == 4) {
+    constraints = (PyArrayObject *) PyArray_FROMANY(oconstraints, NPY_DOUBLE, 2, 2,
+                                             NPY_ARRAY_IN_ARRAY);
+    constraint_group = (PyArrayObject *) PyArray_FROMANY(oconstraint_group, NPY_INT32, 2, 2,
+                                             NPY_ARRAY_IN_ARRAY);
+    if ((!constraints) || (!constraint_group)) {
+      Py_DECREF(positions);
+      Py_DECREF(FC);
+      Py_DECREF(K);
+      Py_DECREF(Phi);
+      Py_DECREF(mu);
+      Py_DECREF(supercell);
+      Py_DECREF(cell);
+      Py_XDECREF(constraints);  
+      Py_XDECREF(constraint_group);  
+      PyErr_Format(PyExc_ValueError,
+                    "Constrains and constraint group for random required but not parsed!");
+      return NULL;
+    } else {
+      constraintsShape = PyArray_SHAPE(constraints);
+      num_constraints = constraintsShape[0];
+      constraintsShape = PyArray_SHAPE(constraint_group);
+      if (constraintsShape[0] != num_constraints ||
+          constraintsShape[1] != num_atoms) {
+          PyErr_Format(PyExc_ValueError, "Constraint group has invalid shape: %d %d, should be %d %d!", 
+                        constraintsShape[0], constraintsShape[1],
+                        num_constraints, num_atoms);
+          // deallocate!!!!!
+          return NULL;
+      }
+    }
+  }  
 
   /* allocate variables needed for simulations */
   
@@ -434,8 +495,6 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwa
     in_phi[i] = *(npy_float64 *) PyArray_GETPTR1(Phi,i);
   }
 
-  
-  
   in_supercell[0] = *(npy_int64 *)PyArray_GETPTR1(supercell, 0);
   in_supercell[1] = *(npy_int64 *)PyArray_GETPTR1(supercell, 1);
   in_supercell[2] = *(npy_int64 *)PyArray_GETPTR1(supercell, 2);
@@ -459,7 +518,17 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwa
     in_axis[2] = *(npy_float64 *)PyArray_GETPTR1(rot_axis, 2);
   }
   
-  
+  if (icalc_type == 4) {
+    in_constraints = (double *) malloc(2*num_constraints*sizeof(double));
+    in_constraint_group = (int *) malloc(num_atoms*num_constraints*sizeof(int));
+    for (i=0; i < num_constraints; i++){
+      for (j=0; j < num_atoms; j++) {
+        in_constraint_group[j + i*num_atoms] = *(npy_int64 *)PyArray_GETPTR2(constraint_group, i, j);
+      }
+      in_constraints[i*2]   = *(npy_float64 *)PyArray_GETPTR2(constraints, i, 0);
+      in_constraints[i*2+1] = *(npy_float64 *)PyArray_GETPTR2(constraints, i, 1);
+    }
+  }
 
   /* allocate output arrays */
   nd = 1;
@@ -505,6 +574,10 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwa
       free(in_cell);          
     if (in_axis != NULL)
       free(in_axis);          
+    if (in_constraints != NULL)
+      free(in_constraints);
+    if (in_constraint_group != NULL)
+      free(in_constraint_group);
     PyErr_SetString(PyExc_MemoryError, "Cannot create output arrays.");
     return NULL;
   }
@@ -532,7 +605,8 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwa
       break;
     case 4:
       RandomSample(in_positions, in_fc, in_K, in_phi, in_supercell, in_cell,
-        r, nnn,rcont, ratms, num_atoms, num_muons, in_muonpos, cont,dip,lor);
+        r, nnn,rcont, num_atoms, num_muons, in_constraints, in_constraint_group,
+        num_constraints, in_muonpos, cont,dip,lor);
       break;
   }
   Py_END_ALLOW_THREADS
@@ -563,6 +637,11 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwa
     free(in_cell);          
   if (in_axis != NULL)            /* Null in case it is optional */
     free(in_axis);  
+  if (in_constraints != NULL)     /* Null in case it is optional */
+    free(in_constraints);
+  if (in_constraint_group != NULL)     /* Null in case it is optional */
+    free(in_constraint_group);
+
   Py_DECREF(positions);
   Py_DECREF(FC);
   Py_DECREF(K);
@@ -571,6 +650,8 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args, PyObject *kwa
   Py_DECREF(supercell);
   Py_DECREF(cell);
   Py_XDECREF(rot_axis);   /* Null in case it is optional */
+  Py_XDECREF(constraints);/* Null in case it is optional */
+  Py_XDECREF(constraint_group);/* Null in case it is optional */
 
   return Py_BuildValue("NNN", ocont, odip, olor);
 }
