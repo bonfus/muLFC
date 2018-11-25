@@ -1,5 +1,5 @@
 /**
- * @file simplesum.cc
+ * @file dipolesum.cc
  * @author Pietro Bonfa
  * @date 18 March 2018
  * @brief Dipolar field calculator
@@ -438,7 +438,6 @@ void  TransformAndSum(const MatX& atomicPositions,
                     Crys2Cart(sc_lat, aux, atomposCart, false);
                     
                     
-                    /*printf("atompos: %e %e %e\n", atmpos.x, atmpos.y, atmpos.z); */
                     /* difference between atom pos and muon pos (cart coordinates) */
                     
                     r_mu = atomposCart - muonposCart;
@@ -580,8 +579,7 @@ void  FastIncom(const MatX& atomicPositions,
     /* initialize variables */
 
     natoms = atomicPositions.cols();
-    //pile_init(CCont, nnn_for_cont);
-    //pile_init(SCont, nnn_for_cont);
+
 
 
     stagmom.resize(natoms);                    /* this is m_0 */
@@ -635,25 +633,18 @@ void  FastIncom(const MatX& atomicPositions,
         
         /* now take care of magntism */
 
-
-        //aux.x() = in_fc[6*a]; 
-        //aux.y() = in_fc[6*a+2]; 
-        //aux.z() = in_fc[6*a+4];
-
         stagmom(a) = FC.col(a).real().norm();
         Ahelix.col(a) = FC.col(a).real().normalized();
 
         
-        /* now B */
-        //aux.x() = in_fc[6*a+1]; 
-        //aux.y() = in_fc[6*a+3]; 
-        //aux.z() = in_fc[6*a+5];
 
-        /* check if they are the same */
+        /* check if real and imaginary parts are the same */
         if (fabs(stagmom(a) - FC.col(a).imag().norm())>EPS)
         {
             printf("ERROR!!! Staggered moment is different in real and imag parts of atom %u\n Use another routine!\n",a);
         }
+
+        /* now B */
         Bhelix.col(a) =  FC.col(a).imag().normalized();
 
         if (fabs(Ahelix.col(a).dot(Bhelix.col(a))) > EPS)
@@ -741,12 +732,6 @@ void  FastIncom(const MatX& atomicPositions,
                                 
                                 aux = stagmom(a) * (s * Ahelix.col(a) - c * Bhelix.col(a));
                                 SCont.add_element(pow(n,CONT_SCALING_POWER), aux);
-                                //std::cout << aux.transpose() << "|" << stagmom(a) << " " << c << " "<<s<<" " << Ahelix.col(a).transpose() << " " << Bhelix.col(a).transpose() << " " << std::endl;
-                                //for (l=0; l < nnn_for_cont; l++) {
-                                //    std::cout << "C: " << nnn_for_cont << " " << l << " " << CCont.elements[i].transpose() << std::endl;
-                                //    std::cout << "S: " << nnn_for_cont << " " << l << " "  << SCont.elements[i].transpose() << std::endl;
-                                //}
-                                //std::cout << "---" << std::endl;
                             }
                         }
                     }                    
