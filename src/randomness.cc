@@ -106,7 +106,7 @@ void UniformRandomInsideUnitCell::AllocateRandomPoints(){
     const T range_to    = _boxSize;
     std::random_device                  rand_dev;
     std::mt19937                        generator(rand_dev());
-    std::uniform_real_distribution<T>  distr(range_from, range_to);
+    std::uniform_real_distribution<T>   distr(range_from, range_to);
 #endif
 
     iters = 0;
