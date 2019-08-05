@@ -343,7 +343,7 @@ def locfield(lattice_params, atomic_positions, fourier_components, propagation_v
         if ctype == 's' or ctype == 'sum':
             res.append(LocalFields(*lfclib.Fields(ctype, p,fc,k,phi,mu,sc,latpar,r,nnn,rc)))
         elif ctype == 'i' or ctype == 'incommensurate':
-            res.append(LocalFields(*lfclib.Fields(ctype, p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles)))
+            res.append(LocalFields(*lfclib.Fields(ctype, p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles=nangles)))
         elif ctype == 'r' or ctype == 'rotate':
             res.append(LocalFields(*lfclib.Fields(ctype, p,fc,k,phi,mu,sc,latpar,r,nnn,rc,nangles,axis)))
     

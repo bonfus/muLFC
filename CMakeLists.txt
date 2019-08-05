@@ -20,7 +20,3 @@ ENDIF()
 
 add_subdirectory (src)
 
-# testing
-add_subdirectory (test)
-enable_testing ()
-add_test (NAME Test1 COMMAND Test)

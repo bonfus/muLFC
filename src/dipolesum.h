@@ -7,6 +7,7 @@
  */
 
 #include <vector>
+#include "lattice.h"
 #include "types.h"
 
 void  DipoleSum(const MatX& atomicPositions,
@@ -15,13 +16,20 @@ void  DipoleSum(const MatX& atomicPositions,
           const Mat3& lattice,
           const double radius, const unsigned int nnn_for_cont, const double cont_radius,
           RefVec3 BC, RefVec3 BD, RefVec3 BL);
+void  DipoleSum2(Lattice,
+          const Vec3& muonpos, unsigned int scx, unsigned int scy, unsigned int scz,
+          const double radius, const unsigned int nnn_for_cont, const double cont_radius,
+          RefVec3 BC, RefVec3 BD, RefVec3 BL);
 void  DipoleSumMany(const MatX& atomicPositions,
           const CMatX& FC, const Vec3 K, const VecX& phi,
           const MatX& muonpos, unsigned int scx, unsigned int scy, unsigned int scz,
           const Mat3& lattice,
           const double radius, const unsigned int nnn_for_cont, const double cont_radius,
           RefMatX BC, RefMatX BD, RefMatX BL);
-
+void  DipoleSumMany2(Lattice,
+          const Vec3& muonpos, unsigned int scx, unsigned int scy, unsigned int scz,
+          const double radius, const unsigned int nnn_for_cont, const double cont_radius,
+          RefVec3 BC, RefVec3 BD, RefVec3 BL);
 void  TransformAndSum(const MatX& atomicPositions,
           const CMatX& FC, const Vec3 K, const VecX& phi,
           const Vec3& muonpos, unsigned int scx, unsigned int scy, unsigned int scz,

@@ -54,9 +54,11 @@ extern "C" {
  * @param cont_radius only atoms within this radius are eligible to contribute to
  *                      the contact field. This option is redundant but speeds
  *                      up the evaluation significantly
- * @param in_constraints: minimum and maximum distance from aech atom reported in in_positions.
  * @param in_natoms: number of atoms in the lattice.
  * @param in_nmounpos: input, number of muon pos to be evaluated.
+ * @param in_constraints: minimum and maximum distance from aech atom reported in in_positions.
+ * @param in_constraint_active: atoms for which the list of constraint is active.
+ * @param in_nconstraints: number of constraints to be considered.
  * @param out_muonpos: positions of the muon in fractional coordinates.
  * @param out_field_cont Contact filed in Tesla in the Cartesian coordinates system defined by in_cell. A coupling of 1 \f$ \mathrm{Ang} ^{-1} \sim 13.912~\mathrm{mol/emu} \f$ is assumed.
  * @param out_field_dip  Dipolar field in Tesla in the Cartesian coordinates system defined by in_cell.
@@ -190,17 +192,14 @@ void  RandomSample(const T *in_positions,
     
     
     for (imu = 0; imu < in_nmounpos; imu++) {
-    
         out_field_lor[imu*3+0] = BLor.col(imu).x();
         out_field_lor[imu*3+1] = BLor.col(imu).y();
         out_field_lor[imu*3+2] = BLor.col(imu).z();
-        
-        
+
         out_field_cont[imu*3+0] = BCont.col(imu).x();
         out_field_cont[imu*3+1] = BCont.col(imu).y();
         out_field_cont[imu*3+2] = BCont.col(imu).z();
-        
-    
+
         out_field_dip[imu*3+0] = B.col(imu).x();
         out_field_dip[imu*3+1] = B.col(imu).y();
         out_field_dip[imu*3+2] = B.col(imu).z();

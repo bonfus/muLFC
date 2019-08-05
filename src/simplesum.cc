@@ -18,7 +18,6 @@
 
 #include "pile.h"
 #include "config.h"
-#include "lattice.h"
 #include "dipolesum.h"
 #include "parsers.h"
 
@@ -84,7 +83,6 @@ void  SimpleSum(const T *in_positions,
     /* description of the magnetic structure. */
     /* data provided in cartesian coordinates */
     VecX phi(in_natoms) ;
-    CVec3 AtomFC;
     CMatX FC(3,in_natoms);
     Vec3 K;
     Vec3 B, BLor, BCont;
@@ -162,6 +160,64 @@ void  SimpleSum(const T *in_positions,
               lattice, radius, nnn_for_cont, cont_radius,
               BCont, B, BLor);
         }
+
+
+        out_field_lor[imu*3+0] = BLor.x();
+        out_field_lor[imu*3+1] = BLor.y();
+        out_field_lor[imu*3+2] = BLor.z();
+
+
+        out_field_cont[imu*3+0] = BCont.x();
+        out_field_cont[imu*3+1] = BCont.y();
+        out_field_cont[imu*3+2] = BCont.z();
+
+
+        out_field_dip[imu*3+0] = B.x();
+        out_field_dip[imu*3+1] = B.y();
+        out_field_dip[imu*3+2] = B.z();
+    }
+
+}
+
+void  SimpleSum2(CLattice * latt, 
+          const T *in_muonpos, const int * in_supercell,
+          const T radius, const unsigned int nnn_for_cont, const T cont_radius,
+          const T min_radius_from_atoms,
+          unsigned int in_nmounpos,
+          T *out_field_cont, T *out_field_dip, T *out_field_lor)
+{
+
+    unsigned int scx, scy, scz; /*supercell sizes */
+
+    Vec3 muonPos;
+    Lattice *l;
+
+    Vec3 B, BLor, BCont;
+    unsigned int imu;     /* counter for muons */
+    T r;
+
+    /* define dupercell size */
+    scx = in_supercell[0];
+    scy = in_supercell[1];
+    scz = in_supercell[2];
+    
+    l = reinterpret_cast<Lattice*>(latt);
+    /* End of atom filtering */
+
+    for (imu = 0; imu < in_nmounpos; imu++) {
+
+        /* muon position in reduced coordinates */
+        muonPos.x() =  in_muonpos[imu*3 + 0];
+        muonPos.y() =  in_muonpos[imu*3 + 1];
+        muonPos.z() =  in_muonpos[imu*3 + 2];
+
+
+        BCont.setZero(); B.setZero(); BLor.setZero();
+
+        DipoleSum2(*l,
+              muonPos, scx, scy, scz,
+              radius, nnn_for_cont, cont_radius,
+              BCont, B, BLor);
 
 
         out_field_lor[imu*3+0] = BLor.x();

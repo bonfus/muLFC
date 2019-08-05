@@ -1,93 +1,65 @@
 #!/usr/bin/env python
+import os
+import re
 import sys
-from os import path
-from setuptools import setup, Extension
+import platform
+import subprocess
+
+from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
+from distutils.version import LooseVersion
+
+
 
 desc = """Local Field Components (or lighting fast calculator) at
 muon sites for the muesr package."""
-#with open('README.md','r') as file:
-#    long_desc = file.read()
 
-# ugly hack to keep tests under the python folder
-sys.path.insert(0, path.join(path.dirname(__file__),'python'))
-
-sources = ['simplesum.cc', \
-           'dipolesum.cc', \
-           'rotatesum.cc', \
-           'fastincommsum.cc', \
-           'dipolartensor.cc', \
-           'randomsample.cc', \
-           'pile.cc', \
-           'parsers.cc', \
-           'randomness.cc', \
-           'lattice.cc']
-
-src_sources = []
-for s in sources:
-    src_sources.append(
-    path.join('.','src',s)
-    )
+class CMakeExtension(Extension):
+    def __init__(self, name, sourcedir=''):
+        Extension.__init__(self, name, sources=[])
+        self.sourcedir = os.path.abspath(sourcedir)
 
 
-openmp_compile_args = []
-openmp_link_args = []
+class CMakeBuild(build_ext):
+    def run(self):
+        try:
+            out = subprocess.check_output(['cmake', '--version'])
+        except OSError:
+            raise RuntimeError("CMake must be installed to build the following extensions: " +
+                               ", ".join(e.name for e in self.extensions))
 
+        if platform.system() == "Windows":
+            cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)', out.decode()).group(1))
+            if cmake_version < '3.1.0':
+                raise RuntimeError("CMake >= 3.1.0 is required on Windows")
 
-## In case of missing numpy array headers
-try:
-    from numpy import get_include as numpy_get_include
-    numpy_include_dir = [numpy_get_include()]
-except:
-    numpy_include_dir = []
-    print("Warning: could not add numpy include dir.")
-
-# Ugly hack to set compiler flags 
-COMPILE_ARGS = {'msvc':[],'gcc':[],'g++':[],'unix':[]}
-LINK_ARGS = {'msvc':[],'gcc':[],'g++':[],'unix':[]}
-
-for compiler, args in [
-        ('msvc', ['/EHsc', '/DHUNSPELL_STATIC']),
-        ('gcc', ['-O3', '-g']),
-        ('g++', ['-O3', '-g']),
-        ('unix', ['-O3', '-g'])]:
-    COMPILE_ARGS[compiler] += args
-# add math lib if needed
-for compiler, args in [
-        ('msvc', []),
-        ('unix', ['-lm']),
-        ('gcc', ['-lm']),
-        ('g++', ['-lm'])]:
-    LINK_ARGS[compiler] += args
-
-# Ugly hack to have openMP as option  --- TEMPORARILY DISABLED
-#if "--with-openmp" in sys.argv:
-#    for compiler, args in [
-#            ('msvc', ['/openmp']),
-#            ('unix', ['-fopenmp']),
-#            ('g++', ['-fopenmp'])]:
-#        COMPILE_ARGS[compiler] += args
-#    for compiler, args in [
-#            ('msvc', []),
-#            ('unix', ['-lgomp']),
-#            ('g++', ['-lgomp'])]:
-#        LINK_ARGS[compiler] += args
-#
-#    sys.argv.remove("--with-openmp")
-
-class build_ext_compiler_check(build_ext):
-    def build_extensions(self):
-        
-        compiler = self.compiler.compiler_type
-        cargs = COMPILE_ARGS[compiler]
         for ext in self.extensions:
-            ext.extra_compile_args = cargs
-            
-        largs = LINK_ARGS[compiler]
-        for ext in self.extensions:
-            ext.extra_link_args = largs
-        
-        build_ext.build_extensions(self)
+            self.build_extension(ext)
+
+    def build_extension(self, ext):
+        extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+                      '-DPYTHON_EXECUTABLE=' + sys.executable]
+
+        cfg = 'Debug' if self.debug else 'Release'
+        build_args = ['--config', cfg]
+
+        if platform.system() == "Windows":
+            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
+            if sys.maxsize > 2**32:
+                cmake_args += ['-A', 'x64']
+            build_args += ['--', '/m']
+        else:
+            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
+            build_args += ['--', '-j2']
+
+        env = os.environ.copy()
+        env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
+                                                              self.distribution.get_version())
+        if not os.path.exists(self.build_temp):
+            os.makedirs(self.build_temp)
+        subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
+        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 setup(name='mulfc',
       version='0.0.2',
@@ -96,14 +68,16 @@ setup(name='mulfc',
       author='Pietro Bonfa',
       author_email='pietro.bonfa@fis.unipr.it',
       url='https://github.com/bonfus/muLFC',
-      packages=['mulfc',],
-      ext_modules=[Extension('lfclib', sources = ['python/lfclib.c',]+src_sources,
-                                      libraries=[],
-                                      include_dirs=numpy_include_dir + [path.join('.','src') , path.join('.','eigen3')])],
-     package_dir={'mulfc': 'python' },
-     install_requires=[
+      # tell setuptools to look for any packages under 'src'
+      packages=find_packages('src'),
+      # tell setuptools that all packages will be under the 'src' directory
+      # and nowhere else
+      package_dir={'':'src'},
+      ext_modules=[CMakeExtension('mulfc')],
+      cmdclass=dict(build_ext=CMakeBuild),
+      install_requires=[
           'numpy >= 1.8',
-     ],
-     test_suite="tests",
-     cmdclass={ 'build_ext': build_ext_compiler_check }
+      ],
+      test_suite="tests",
+      zip_safe=False
      )

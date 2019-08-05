@@ -1,5 +1,11 @@
 #include <iostream>
+#include <random>
+
+#include <pybind11/pybind11.h>
+#include <pybind11/eigen.h>
+
 #include "lattice.h"
+#include "config.h"
 
 void Crys2Cart(const Mat3& trmat, const MatX& pos, RefMatX out, bool reverseDirection)
 {
@@ -51,10 +57,10 @@ DistanceCalc::DistanceCalc(const Mat3& lattice, const MatX& atomicPositions) {
     int natoms = atomicPositions.cols();
 
 
-    sctmp << (T) 3,     0,     0, 
+    sctmp << (T) 3,     0,     0,
                  0, (T) 3,     0,
                  0,     0, (T) 3;
-    
+
     atomicPosSCFrac.resize(3, 3*3*3*natoms);
     scAtomsPosCart.resize(3, 3*3*3*natoms);
     scAtomNum.resize(3*3*3*natoms);
@@ -70,7 +76,7 @@ DistanceCalc::DistanceCalc(const Mat3& lattice, const MatX& atomicPositions) {
             for (int j=0; j < 3; j ++) {
                 for (int k=0; k < 3; k ++) {
                     vaux << ((T) i)/3. ,((T) j)/3. ,((T) k)/3.;
-                    
+
                     atomicPosSCFrac.col(idx) = atomicPositions.col(l)/3. + vaux;
                     scAtomNum(idx) = l;
                     idx++;
@@ -96,11 +102,11 @@ void DistanceCalc::GetMinDistancesFromAtoms(const IVecX& atoms_type, const MatX&
 
     // lattice scaled by 3 in all directions
     intPositionSCFrac = intPositionFrac/3. + 0.3333333333*MatX::Ones(3, npositions);
-    
+
     // pos in cartesian coordinates
     Crys2Cart(scLattice, intPositionSCFrac, intPositionSCCart, false);
 
-    
+
     for (int i=0; i < intPositionSCCart.cols(); i ++) {
         nrm = std::numeric_limits<double>::max();
         for (int l=0; l < scAtomsPosCart.cols(); l++) {
@@ -121,7 +127,7 @@ T DistanceCalc::GetMinDistanceFromAtoms(const Vec3& intPosition)
 
     // lattice scaled by 3 in all directions
     intPositionSCFrac = intPosition/3. + 0.3333333333*Vec3::Ones();
-    
+
     // pos in cartesian coordinates
     Crys2Cart(scLattice, intPositionSCFrac, intPositionSCCart, false);
 
@@ -134,4 +140,228 @@ T DistanceCalc::GetMinDistanceFromAtoms(const Vec3& intPosition)
     }
 
     return nrm;
+}
+
+/* Lattice Class
+ *
+ */
+
+Lattice::Lattice(const Mat3& unitCell, 
+                  const MatX& atomicPositions, 
+                  const VecX& atomicOccupations, 
+                  const IVecX& atomicOccupationsGroups,
+                  const MatX& sitesCorrelation, 
+                  const VecX& _Phi,
+                  const CMatX& _FC,
+                  const Vec3& _K) : Phi(_Phi), FC(_FC), K(_K)
+{
+    int label;
+
+    directCell = unitCell;
+    recips(unitCell, recirpcalCell);
+
+    /* === Atoms data === */
+    nAtoms = atomicPositions.cols();
+    atomPosCart.resize(3, nAtoms);
+    atomPosFrac.resize(3, nAtoms);
+    atomFracOcc.resize(nAtoms);
+    atomFracOccGroups.resize(nAtoms);
+    atomFracTable.resize(nAtoms, nAtoms);
+    correlation.resize(nAtoms, nAtoms);
+
+    /* Atomic positions: reduced coordinates */
+    atomPosFrac = atomicPositions;
+
+    /* Atomic positions: reduced coordinates -> Cartesian Coordinates */
+    Crys2Cart(unitCell, atomicPositions, atomPosCart, false);
+    
+
+    atomFracOcc       = atomicOccupations;
+    atomFracOccGroups = atomicOccupationsGroups;
+    correlation       = sitesCorrelation;
+
+    anyPartialOccupation = (atomFracOcc.array() < 1.0-EPS).any();
+
+    if ( anyPartialOccupation ) {
+        atomFracTable.setOnes();
+        atomFracTable *= -1;
+
+        for (unsigned int i = 0; i < nAtoms; i++)
+        {
+            label = atomFracOccGroups(i);
+            if ( label > 0 ){
+                /* Add atom i in the first available position */
+                for (unsigned int j = 0; j < nAtoms; j++) {
+                    if (atomFracTable(j, label-1) < 0) {
+                        atomFracTable(j, label-1) = i;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+Lattice::Lattice(const Mat3& unitCell, 
+                  const MatX& atomicPositions, 
+                  const VecX& _Phi,
+                  const CMatX& _FC,
+                  const Vec3& _K) : Phi(_Phi), FC(_FC), K(_K)
+{
+
+    directCell = unitCell;
+    recips(unitCell, recirpcalCell);
+
+    /* === Atoms data === */
+    nAtoms = atomicPositions.cols();
+    atomPosCart.resize(3, nAtoms);
+    atomPosFrac.resize(3, nAtoms);
+    atomFracOcc.resize(nAtoms);
+    atomFracOccGroups.resize(nAtoms);
+    atomFracTable.resize(nAtoms, nAtoms);
+    correlation.resize(nAtoms, nAtoms);
+
+    /* Atomic positions: reduced coordinates */
+    atomPosFrac = atomicPositions;
+
+    /* Atomic positions: reduced coordinates -> Cartesian Coordinates */
+    Crys2Cart(unitCell, atomicPositions, atomPosCart, false);
+    
+
+    atomFracOcc.setOnes();
+    atomFracOccGroups.setZero();
+    correlation.setZero();
+
+    anyPartialOccupation = false;
+    atomFracTable.setOnes();
+    atomFracTable *= -1;
+}
+
+void Lattice::SetOccupations(VecX& atomicOccupations, IVecX& atomicOccupationsGroups, MatX& sitesCorrelation) {
+
+    int label;
+    atomFracOcc       = atomicOccupations;
+    atomFracOccGroups = atomicOccupationsGroups;
+    correlation       = sitesCorrelation;
+
+    anyPartialOccupation = (atomFracOcc.array() < 1.0-EPS).any();
+
+    if ( anyPartialOccupation ) {
+        atomFracTable.setOnes();
+        atomFracTable *= -1;
+
+        for (unsigned int i = 0; i < nAtoms; i++)
+        {
+            label = atomFracOccGroups(i);
+            if ( label > 0 ){
+                /* Add atom i in the first available position */
+                for (unsigned int j = 0; j < nAtoms; j++) {
+                    if (atomFracTable(j, label-1) < 0) {
+                        atomFracTable(j, label-1) = i;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+void Lattice::GetCell(RefMat3 cell) { cell = directCell; }
+void Lattice::GetReciprocalCell(RefMat3 cell) { cell = recirpcalCell; }
+void Lattice::MaterializeOccupationsInCell(RefIVecX occupations){
+
+    T rndVal;
+    unsigned int atmIdx;
+    int label;
+    occupations.setOnes();
+    if (not anyPartialOccupation)
+        return;
+
+    std::mt19937 rng;
+    rng.seed(std::random_device()());
+    /* produces random numbers in a range [a,b) */
+    std::uniform_real_distribution<T> distr(0, 1);
+
+    do {
+        for (unsigned int i = 0; i < nAtoms; i++)
+        {
+            /* search within the table allocations that should be assigned */
+            label = atomFracTable(0, i);
+        
+            if ( label >= 0 ) {
+                /* generate a PRNG in the range [0, 1) */
+                rndVal = distr(rng);
+        
+                /* This loop is for all the possible entries in having this label.
+                 * The maximum value is nAtoms (occupiation split by all atoms in the cell) */
+                for (unsigned int j = 0; j < nAtoms; j++)
+                {
+                    /* all elements except those part of a group are set -1.
+                     * When there are no more elements to check, exti the loop
+                     * for this label. */
+        
+                    if (atomFracTable(j, i) < 0) {
+                        break;
+                    } else {
+                        atmIdx = atomFracTable(j, i);
+                    }
+        
+                    /* If the current value of the random number is negative
+                     *  we already assigned the occupation to some other atom */
+                    if (rndVal < 0.0) {
+                        occupations(atmIdx) = 0;
+                        continue;
+                    }
+        
+                    /* if the current value of rndVal is in the interval
+                     * [0, atomFracOcc(atmIdx) )
+                     * site is assigned.*/
+                    if ( rndVal < atomFracOcc(atmIdx) ) {
+                        occupations(atmIdx) = 1;
+                    } else {
+                        occupations(atmIdx) = 0;
+                    }
+                    /* remove the interval that we just checked to see if the
+                     * random value is in the next interval (if any is present)
+                     */
+                    rndVal -= atomFracOcc(atmIdx);
+                }
+            }
+        }
+        if ( GetCorrelationTemperature(occupations) < distr(rng) ) break;
+    } while ( true );
+}
+
+T Lattice::GetCorrelationTemperature(const IVecX& occupations){
+
+    T temp;
+    int label;
+    //  std::cout << "corr max " << correlation.array().abs() << std::endl;
+    if ((correlation.array().abs() <= EPS).all())
+        return 0.0;
+
+    temp = 0.0;
+    for (unsigned int i = 0; i < nAtoms; i++)
+    {
+        /* search within the table allocations that should be assigned */
+        if ( occupations(i) == 1 ) {
+            for (unsigned int j = 0; j < nAtoms; j++)
+                temp += correlation(j, i)*occupations(j);
+        }
+    }
+    return temp;
+}
+
+
+// ----------------
+// Python interface
+// ----------------
+
+
+namespace py = pybind11;
+
+void init_lattice(py::module &m) {
+    py::class_<Lattice>(m, "Lattice")
+    .def(py::init<Mat3, MatX, VecX, CMatX, Vec3>())
+    ;
 }
