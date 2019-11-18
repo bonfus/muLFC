@@ -7,14 +7,14 @@
 #include "lattice.h"
 #include "config.h"
 
-void Crys2Cart(const Mat3& trmat, const MatX& pos, RefMatX out, bool reverseDirection)
+void Crys2Cart(const Mat3& trmat, const MatX& pos, RefMatX out)
 {
-    Vec3 aux;
-    if (reverseDirection) {
-        out = trmat.inverse() * pos;
-    } else {
-        out = trmat * pos;
-    }
+    out = trmat * pos;
+}
+
+void Cart2Crys(const Mat3& trmat, const MatX& pos, RefMatX out)
+{
+    out = trmat.inverse() * pos;
 }
 
 
@@ -86,7 +86,7 @@ DistanceCalc::DistanceCalc(const Mat3& lattice, const MatX& atomicPositions) {
     }
 
     /* apos in Cart coordinates */
-    Crys2Cart(scLattice, atomicPosSCFrac, scAtomsPosCart, false);
+    Crys2Cart(scLattice, atomicPosSCFrac, scAtomsPosCart);
 }
 
 void DistanceCalc::GetMinDistancesFromAtoms(const IVecX& atoms_type, const MatX& intPositionFrac, RefVecX distances)
@@ -104,7 +104,7 @@ void DistanceCalc::GetMinDistancesFromAtoms(const IVecX& atoms_type, const MatX&
     intPositionSCFrac = intPositionFrac/3. + 0.3333333333*MatX::Ones(3, npositions);
 
     /* pos in cartesian coordinates */
-    Crys2Cart(scLattice, intPositionSCFrac, intPositionSCCart, false);
+    Crys2Cart(scLattice, intPositionSCFrac, intPositionSCCart);
 
 
     for (int i=0; i < intPositionSCCart.cols(); i++) {
@@ -129,7 +129,7 @@ T DistanceCalc::GetMinDistanceFromAtoms(const Vec3& intPosition)
     intPositionSCFrac = intPosition/3. + 0.3333333333*Vec3::Ones();
 
     /* pos in cartesian coordinates */
-    Crys2Cart(scLattice, intPositionSCFrac, intPositionSCCart, false);
+    Crys2Cart(scLattice, intPositionSCFrac, intPositionSCCart);
 
     nrm = std::numeric_limits<T>::max();
 
@@ -173,7 +173,7 @@ Lattice::Lattice(const Mat3& unitCell,
     atomPosFrac = atomicPositions;
 
     /* Atomic positions: reduced coordinates -> Cartesian Coordinates */
-    Crys2Cart(unitCell, atomicPositions, atomPosCart, false);
+    Crys2Cart(unitCell, atomicPositions, atomPosCart);
 
 
     atomFracOcc       = atomicOccupations;
@@ -225,7 +225,7 @@ Lattice::Lattice(const Mat3& unitCell,
     atomPosFrac = atomicPositions;
 
     /* Atomic positions: reduced coordinates -> Cartesian Coordinates */
-    Crys2Cart(unitCell, atomicPositions, atomPosCart, false);
+    Crys2Cart(unitCell, atomicPositions, atomPosCart);
 
 
     atomFracOcc.setOnes();

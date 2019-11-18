@@ -85,14 +85,14 @@ void  DipoleSum(Lattice latt,
     recips(lattice, recLattice);
 
     /* Propagation vector in Cartesian coordinates */
-    Crys2Cart(recLattice, latt.K, KCart, false);
+    Crys2Cart(recLattice, latt.K, KCart);
 
     /* Get the position of the central cell */
     aux << (T) (scx/2), (T) (scy/2), (T) (scz/2);
-    Crys2Cart(lattice, aux, R, false);
+    Crys2Cart(lattice, aux, R);
 
     /* muon position: reduced coordinates -> Cartesian Coordinates */
-    Crys2Cart(lattice, muonpos, muonposCart, false);
+    Crys2Cart(lattice, muonpos, muonposCart);
 
     /* Cartesian coordinates of the muon moved in the central cell of the supercell */
     muonposCart = muonposCart + R;
@@ -103,7 +103,7 @@ void  DipoleSum(Lattice latt,
     occupations.resize(latt.nAtoms);
 
     /* Atomic positions: reduced coordinates -> Cartesian Coordinates */
-    Crys2Cart(lattice, latt.atomPosFrac, atomposCart, false);
+    Crys2Cart(lattice, latt.atomPosFrac, atomposCart);
 
     /* === Fields data === */
     BC = Vec3::Zero();
@@ -122,7 +122,7 @@ void  DipoleSum(Lattice latt,
                 r.z() = ( (T) k );
 
                 /* Radius from origin of cell position under consideration (in Cartesian coordinates) */
-                Crys2Cart(lattice, r, R, false);
+                Crys2Cart(lattice, r, R);
 
                 have_moments_for_cell = false;
                 /* loop over atoms */
@@ -264,14 +264,14 @@ void  DipoleSumMany(Lattice latt,
     recips(lattice, recLattice);
 
     /* Propagation vector in Cartesian coordinates */
-    Crys2Cart(recLattice, latt.K, KCart, false);
+    Crys2Cart(recLattice, latt.K, KCart);
 
     /* Cell in the middle */
     aux << (T) (scx/2), (T) (scy/2), (T) (scz/2);
-    Crys2Cart(lattice, aux, R, false);
+    Crys2Cart(lattice, aux, R);
 
     /* muon position: reduced coordinates -> Cartesian Coordinates */
-    Crys2Cart(lattice, muonpos, muonposCart, false);
+    Crys2Cart(lattice, muonpos, muonposCart);
 
     /* Cartesian coordinates in the center of the supercell */
     muonposCart.colwise() += R;
@@ -282,7 +282,7 @@ void  DipoleSumMany(Lattice latt,
     occupations.resize(latt.nAtoms);
 
     /* Atomic positions: reduced coordinates -> Cartesian Coordinates */
-    Crys2Cart(lattice, latt.atomPosFrac, atomposCart, false);
+    Crys2Cart(lattice, latt.atomPosFrac, atomposCart);
 
     /* === Fields data === */
     BC.setZero();
@@ -301,7 +301,7 @@ void  DipoleSumMany(Lattice latt,
                 r.z() = ( (T) k );
 
                 /* Cell position in Cartesian coordinates */
-                Crys2Cart(lattice, r, R, false);
+                Crys2Cart(lattice, r, R);
 
 
                 have_moments_for_cell = false;
@@ -491,7 +491,7 @@ void  FastIncom(const MatX& atomicPositions,
 
 
     /* go to reciprocal cartesia coordinates. */
-    Crys2Cart(recLattice, K, KCart, false);
+    Crys2Cart(recLattice, K, KCart);
 
     aux << (double) scx, (double) scy, (double) scz;
     sc_lat = lattice * aux.asDiagonal();
@@ -502,7 +502,7 @@ void  FastIncom(const MatX& atomicPositions,
     aux.y() =  (muonpos.y() + (scy/2) ) / (float) scy;
     aux.z() =  (muonpos.z() + (scz/2) ) / (float) scz;
 
-    Crys2Cart(sc_lat, aux, muonposCart, false);
+    Crys2Cart(sc_lat, aux, muonposCart);
 
 
     for (a = 0; a < natoms; ++a)
@@ -541,7 +541,7 @@ void  FastIncom(const MatX& atomicPositions,
         }
 
     }
-    Crys2Cart(sc_lat, refatmpos, refatomposCart, false);
+    Crys2Cart(sc_lat, refatmpos, refatomposCart);
 
 /* parallel execution starts here */
 /* the shared variables are listed just to remember about data races! */
@@ -565,7 +565,7 @@ void  FastIncom(const MatX& atomicPositions,
                         aux.z() = ( atomicPositions.col(a).z() + (T) k) / (T) scz;
 
                         /* go to cartesian coordinates (in Angstrom!) */
-                        Crys2Cart(sc_lat, aux, atomposCart, false);
+                        Crys2Cart(sc_lat, aux, atomposCart);
 
                         /* difference between atom pos and muon pos (cart coordinates) */
                         r = atomposCart - muonposCart;
@@ -746,10 +746,10 @@ void DT(MatX& atomicPositions,  MatX& muonpos,
 
     /* Get the position of the central cell */
     aux << (T) (scx/2), (T) (scy/2), (T) (scz/2);
-    Crys2Cart(lattice, aux, R, false);
+    Crys2Cart(lattice, aux, R);
 
     /* muon position: reduced coordinates -> Cartesian Coordinates */
-    Crys2Cart(lattice, muonpos, muonposCart, false);
+    Crys2Cart(lattice, muonpos, muonposCart);
 
     /* Cartesian coordinates of the muon moved in the central cell of the supercell */
     muonposCart = muonposCart + R;
@@ -759,7 +759,7 @@ void DT(MatX& atomicPositions,  MatX& muonpos,
 
 
     /* Atomic positions: reduced coordinates -> Cartesian Coordinates */
-    Crys2Cart(lattice, atomicPositions, atomposCart, false);
+    Crys2Cart(lattice, atomicPositions, atomposCart);
 
 
     A.setZero();
@@ -778,7 +778,7 @@ void DT(MatX& atomicPositions,  MatX& muonpos,
                 r.z() = ( (T) k );
 
                 /* Radius from origin of cell position under consideration (in Cartesian coordinates) */
-                Crys2Cart(lattice, r, R, false);
+                Crys2Cart(lattice, r, R);
 
                 for (a = 0; a < atomposCart.cols(); ++a)
                 {
@@ -878,12 +878,12 @@ int moments(Lattice latt,
     recips(lattice, recLattice);
 
     /* Propagation vector in Cartesian coordinates */
-    Crys2Cart(recLattice, latt.K, KCart, false);
+    Crys2Cart(recLattice, latt.K, KCart);
 
     /* Cell in the middle */
     center_x = scx/2; center_y = scy/2; center_z = scz/2;
     aux << (T) (scx/2), (T) (scy/2), (T) (scz/2);
-    Crys2Cart(lattice, aux, R, false);
+    Crys2Cart(lattice, aux, R);
 
     /* === Atoms data === */
     atomposCart.resize(3, latt.nAtoms);
@@ -891,7 +891,7 @@ int moments(Lattice latt,
 /*    occupations.resize(latt.nAtoms); */
 
     /* Atomic positions: reduced coordinates -> Cartesian Coordinates */
-    Crys2Cart(lattice, latt.atomPosFrac, atomposCart, false);
+    Crys2Cart(lattice, latt.atomPosFrac, atomposCart);
 
     /* === Fields data === */
     AtomNum.setZero();
@@ -910,7 +910,7 @@ int moments(Lattice latt,
                 r.z() = ( (T) k );
 
                 /* Cell position in Cartesian coordinates */
-                Crys2Cart(lattice, r, R, false);
+                Crys2Cart(lattice, r, R);
 
                 /*latt.MaterializeOccupationsInCell(occupations); */
                 FCtoMagMom(latt.FC, KCart, latt.Phi, R, atomMoms);
@@ -949,10 +949,10 @@ int moments(Lattice latt,
 
 namespace py = pybind11;
 
-py::tuple  Fields(std::string s,  MatX& atomicPositions,  CMatX& FC,
-                  Vec3& K,  VecX& Phi,  MatX& muonpos, const IVec3& sc,  Mat3& unitCell,
-                  const double radius, const unsigned int nnn_for_cont, const double cont_radius,
-                  const int nangles=1, Vec3& axis=EMPTY)
+py::tuple Fields(std::string s,  MatX& atomicPositions,  CMatX& FC,
+                 Vec3& K,  VecX& Phi,  MatX& muonpos, const IVec3& sc,  Mat3& unitCell,
+                 const double radius, const unsigned int nnn_for_cont, const double cont_radius,
+                 const int nangles=1, Vec3& axis=EMPTY)
 {
 
 
@@ -968,7 +968,6 @@ py::tuple  Fields(std::string s,  MatX& atomicPositions,  CMatX& FC,
     /* Set data dimensions */
     int nMuons = muonpos.cols();
 
-
     /*std::cout << "atomicPositions "<< atomicPositions.rows() << " " << atomicPositions.cols() << std::endl; */
 
     MatX BD(3, nMuons*nangles), BL(3, nMuons*nangles), BC(3, nMuons*nangles);
@@ -977,17 +976,12 @@ py::tuple  Fields(std::string s,  MatX& atomicPositions,  CMatX& FC,
         DipoleSumMany(l, muonpos, sc(0), sc(1), sc(2), radius,  nnn_for_cont, cont_radius,
                       axis, nangles,
                       BC,  BD,  BL);
-    }
-
-    if (s=="r" || s=="rotate")
+    } else if (s=="r" || s=="rotate")
     {
         DipoleSumMany(l, muonpos, sc(0), sc(1), sc(2), radius,  nnn_for_cont, cont_radius,
                       axis, nangles,
                       BC,  BD,  BL);
-    }
-
-
-    if (s=="i" || s=="inc") {
+    } else if (s=="i" || s=="inc") {
         for (int i=0; i<nMuons; i++)
         {
             FastIncom(atomicPositions, FC, K, Phi, muonpos.col(i),  sc(0), sc(1), sc(2),
@@ -996,6 +990,8 @@ py::tuple  Fields(std::string s,  MatX& atomicPositions,  CMatX& FC,
                       BD.block(0, i * nangles, 3,  nangles ),
                       BL.block(0, i * nangles, 3,  nangles ));
         }
+    } else {
+        throw std::invalid_argument( "Calulation type not implemented" );
     }
 
     BC.transposeInPlace();

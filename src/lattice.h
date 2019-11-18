@@ -3,7 +3,8 @@
 #include "types.h"
 
 
-void Crys2Cart(const Mat3& trmat, const MatX& pos, RefMatX out, bool reverseDirection);
+void Crys2Cart(const Mat3& trmat, const MatX& pos, RefMatX out);
+void Cart2Crys(const Mat3& trmat, const MatX& pos, RefMatX out);
 void recips (const Mat3& lat, RefMatX rec);
 
 class DistanceCalc {
