@@ -8,8 +8,8 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
-#include <Eigen/Geometry> 
- 
+#include <Eigen/Geometry>
+
 #include <stdio.h>
 #include <vector>
 #include "types.h"
@@ -21,22 +21,20 @@
 #    define M_PI 3.14159265358979323846
 #endif
 
-Vec3 EMPTY;
+Vec3 EMPTY = Eigen::Vector3d::Zero();
 
 /**
     Returns magnetic moments from Fourier Components given for the cell
     in position R given
 
-    @param digit the single digit to encode.
-    @return a bar code of the digit using "|" as the long
-    bar and "," as the half bar.
-*/
+    @param FC fourier components for all atoms
+ */
 void FCtoMagMom(const CMatX& FC, const Vec3 KCart, const VecX& phi, const Vec3 R, RefMatX m)
 {
     unsigned int a;     /* counter for atoms */
     T c, s, KdotR;      /*cosine and sine of K.R */
 
-    KdotR =  KCart.dot(R); // R \dot K (done in cartesian coordinates)
+    KdotR =  KCart.dot(R); /* R \dot K (done in cartesian coordinates) */
     for (a = 0; a < m.cols(); ++a)
     {
         c = cos (KdotR + 2.0*M_PI*phi(a) );
@@ -48,12 +46,12 @@ void FCtoMagMom(const CMatX& FC, const Vec3 KCart, const VecX& phi, const Vec3 R
 
 /* Never really used... */
 void  DipoleSum(Lattice latt,
-          const Vec3& muonpos, unsigned int scx, unsigned int scy, unsigned int scz,
-          const double radius, const unsigned int nnn_for_cont, const double cont_radius,
-          RefVec3 BC, RefVec3 BD, RefVec3 BL)
+                const Vec3& muonpos, unsigned int scx, unsigned int scy, unsigned int scz,
+                const double radius, const unsigned int nnn_for_cont, const double cont_radius,
+                RefVec3 BC, RefVec3 BD, RefVec3 BL)
 {
 
-     /*supercell sizes */
+    /*supercell sizes */
     unsigned int i,j,k; /* counters for supercells */
 
     MatX atomposCart;
@@ -77,19 +75,19 @@ void  DipoleSum(Lattice latt,
     pile MCont(nnn_for_cont);
 
     unsigned int a;     /* counter for atoms */
-	  int NofM = 0; /* Number of moments considered */
-	  double SumOfWeights = 0;
+    int NofM = 0;       /* Number of moments considered */
+    double SumOfWeights = 0;
     bool have_moments_for_cell = false;
 
     latt.GetCell(lattice);
-    
+
     /* Calculate reciprocal lattice */
     recips(lattice, recLattice);
 
     /* Propagation vector in Cartesian coordinates */
     Crys2Cart(recLattice, latt.K, KCart, false);
 
-    // Get the position of the central cell
+    /* Get the position of the central cell */
     aux << (T) (scx/2), (T) (scy/2), (T) (scz/2);
     Crys2Cart(lattice, aux, R, false);
 
@@ -143,7 +141,7 @@ void  DipoleSum(Lattice latt,
                         /* calculate magnetic moment for cell at R */
                         if ( not have_moments_for_cell ) {
                             latt.MaterializeOccupationsInCell(occupations);
-                            //std::cout << "Occupations are: " << occupations.transpose() << std::endl;
+                            /*std::cout << "Occupations are: " << occupations.transpose() << std::endl; */
                             FCtoMagMom(latt.FC, KCart, latt.Phi, R, atomMoms);
                             have_moments_for_cell = true;
                         }
@@ -214,13 +212,13 @@ void  DipoleSum(Lattice latt,
 
 
 void  DipoleSumMany(Lattice latt,
-          const MatX& muonpos, unsigned int scx, unsigned int scy, unsigned int scz,
-          const double radius, const unsigned int nnn_for_cont, const double cont_radius,
-          const Vec3& axis, const int nAngles,
-          RefMatX BC, RefMatX BD, RefMatX BL)
+                    const MatX& muonpos, unsigned int scx, unsigned int scy, unsigned int scz,
+                    const double radius, const unsigned int nnn_for_cont, const double cont_radius,
+                    const Vec3& axis, const int nAngles,
+                    RefMatX BC, RefMatX BD, RefMatX BL)
 {
 
-     /*supercell sizes */
+    /*supercell sizes */
     unsigned int i,j,k; /* counters for supercells */
 
     MatX atomposCart;
@@ -245,14 +243,13 @@ void  DipoleSumMany(Lattice latt,
 
     unsigned int a;     /* counter for atoms */
     int NofM = 0; /* Number of moments considered */
-	double SumOfWeights = 0;
+    double SumOfWeights = 0;
     int nMuons = muonpos.cols();
-    int which_index = 0;
 
-    
-    // Set data dimensions
+
+    /* Set data dimensions */
     muonposCart.resizeLike(muonpos);
-    
+
     pile ** MCont = new pile*[nMuons];
     for (int i=0; i < nMuons; i++) {
         MCont[i] = new pile(nnn_for_cont);
@@ -262,14 +259,14 @@ void  DipoleSumMany(Lattice latt,
     unitRotMat = AngleAxisd(2.0*M_PI/nAngles, axis);
 
     latt.GetCell(lattice);
-    
+
     /* Calculate reciprocal lattice */
     recips(lattice, recLattice);
 
     /* Propagation vector in Cartesian coordinates */
     Crys2Cart(recLattice, latt.K, KCart, false);
 
-    // Cell in the middle
+    /* Cell in the middle */
     aux << (T) (scx/2), (T) (scy/2), (T) (scz/2);
     Crys2Cart(lattice, aux, R, false);
 
@@ -313,12 +310,12 @@ void  DipoleSumMany(Lattice latt,
                 {
                     /* calculate magnetic moment for cell at R */
                     if ( not have_moments_for_cell ) {
-                        //latt.MaterializeOccupationsInCell(occupations);
+                        /*latt.MaterializeOccupationsInCell(occupations); */
                         FCtoMagMom(latt.FC, KCart, latt.Phi, R, atomMoms);
                         have_moments_for_cell = true;
                     }
-                    //if (occupations(a) == 0) continue;
-                    
+                    /*if (occupations(a) == 0) continue; */
+
                     aux = R + atomposCart.col(a);
 
                     /* loop over muons */
@@ -334,27 +331,27 @@ void  DipoleSumMany(Lattice latt,
                         {
                             m = atomMoms.col(a);
                             if (m.norm() <= EPS) continue;
-                            
-                            for (int iang = 0; iang < nAngles; iang++) {
-    
-                                /* Calculate Lorentz Field */
-                                BL.col(iang + imu*nAngles) += m;
 
-                                /* unit vector */
-                                u = r_mu.normalized();
-                                onebrcube = 1.0/pow(n,3);
-
-                                BD.col(iang + imu*nAngles) += onebrcube * ( u*3.0*m.dot(u) -  m );
-                                
-                                /* increment by rotation */
-                                if(nAngles > 1) m = unitRotMat*m;
-                                
-                            } /* loop on angles */
+                            /* unit vector */
+                            u = r_mu.normalized();
+                            onebrcube = 1.0/pow(n,3);
 
                             /* Store contact field once, to be rotated later  */
                             if (n < cont_radius) {
                                 MCont[imu]->add_element(pow(n,CONT_SCALING_POWER), (1./pow(n,CONT_SCALING_POWER))*m);
                             }
+
+                            for (int iang = 0; iang < nAngles; iang++) {
+
+                                /* Calculate Lorentz Field */
+                                BL.col(iang + imu*nAngles) += m;
+
+                                BD.col(iang + imu*nAngles) += onebrcube * ( u*3.0*m.dot(u) -  m );
+
+                                /* increment by rotation */
+                                if(nAngles > 1) m = unitRotMat*m;
+
+                            } /* loop on angles */
 
                         } /* if inside sphere */
                     } /* for each muon */
@@ -383,21 +380,21 @@ void  DipoleSumMany(Lattice latt,
             NofM = 0; /* Number of moments considered */
             SumOfWeights = 0;
             for (i=0; i < nnn_for_cont; i++) {
-                    if (MCont[imu]->ranks(i) > 0.0) {
-                        BC.col(iang + imu*nAngles) += MCont[imu]->elements.col(i);
-                        SumOfWeights += (1./MCont[imu]->ranks(i)); /* Add the contribution weighted as norm^3 to the total */
-                        NofM++;
-                    }
+                if (MCont[imu]->ranks(i) > 0.0) {
+                    BC.col(iang + imu*nAngles) += MCont[imu]->elements.col(i);
+                    SumOfWeights += (1./MCont[imu]->ranks(i));     /* Add the contribution weighted as norm^3 to the total */
+                    NofM++;
+                }
             }
             /* (2 magnetic_constant/3)⋅1bohr_magneton   = ((2 ⋅ magnetic_constant) ∕ 3) ⋅ (1 ⋅ bohr_magneton)
-            *   ≈ 7.769376E-27((g⋅m^3) ∕ (A⋅s^2))
-            *   ≈ 7.769376 T⋅Å^3
-            */
-    
+             *   ≈ 7.769376E-27((g⋅m^3) ∕ (A⋅s^2))
+             *   ≈ 7.769376 T⋅Å^3
+             */
+
             if (NofM >0) {
                 BC.col(iang + imu*nAngles) = (1./SumOfWeights) * 7.769376 * BC.col(iang + imu*nAngles);
             } /* otherwise is zero anyway! */
-            
+
             /* now rotate everything */
             for (i=0; i < nnn_for_cont; i++) {
                 m = MCont[imu]->elements.col(i);
@@ -413,12 +410,12 @@ void  DipoleSumMany(Lattice latt,
 }
 
 void  FastIncom(const MatX& atomicPositions,
-          const CMatX& FC, const Vec3 K, const VecX& phi,
-          const Vec3& muonpos, unsigned int scx, unsigned int scy, unsigned int scz,
-          const Mat3& lattice,
-          const double radius, const unsigned int nnn_for_cont, const double cont_radius,
-          const unsigned int in_nangles,
-          RefMatX BC, RefMatX BD, RefMatX BL)
+                const CMatX& FC, const Vec3 K, const VecX& phi,
+                const Vec3& muonpos, unsigned int scx, unsigned int scy, unsigned int scz,
+                const Mat3& lattice,
+                const double radius, const unsigned int nnn_for_cont, const double cont_radius,
+                const unsigned int in_nangles,
+                RefMatX BC, RefMatX BD, RefMatX BL)
 {
 
     Vec3 atomposCart;
@@ -471,15 +468,15 @@ void  FastIncom(const MatX& atomicPositions,
 
 
 
-    stagmom.resize(natoms);                    /* this is m_0 */
-    refatmpos.resize(3, natoms);             /* reference atom used to produce C and S     */
-    refatomposCart.resize(3, natoms);             /* reference atom used to produce C and S     */
-    Ahelix.resize(3, natoms ) ;
+    stagmom.resize(natoms);           /* this is m_0 */
+    refatmpos.resize(3, natoms);      /* reference atom used to produce C and S     */
+    refatomposCart.resize(3, natoms); /* reference atom used to produce C and S     */
+    Ahelix.resize(3, natoms );
     Bhelix.resize(3, natoms );/* two unit vectors describing the helix in the m_0 (cos(phi).a +/- sin(phi).b) */
     SDip.resize(3, natoms );
-    CDip.resize(3, natoms ); /* sums of contribution providing cosine and sine prefactors */
+    CDip.resize(3, natoms );  /* sums of contribution providing cosine and sine prefactors */
     SLor.resize(3, natoms );
-    CLor.resize(3, natoms );/* sums of contribution providing cosine and sine prefactors */
+    CLor.resize(3, natoms );  /* sums of contribution providing cosine and sine prefactors */
 
     Ahelix.setZero(3, natoms);
     Bhelix.setZero(3, natoms);
@@ -493,7 +490,7 @@ void  FastIncom(const MatX& atomicPositions,
     recips(lattice, recLattice);
 
 
-    // go to reciprocal cartesia coordinates.
+    /* go to reciprocal cartesia coordinates. */
     Crys2Cart(recLattice, K, KCart, false);
 
     aux << (double) scx, (double) scy, (double) scz;
@@ -549,74 +546,75 @@ void  FastIncom(const MatX& atomicPositions,
 /* parallel execution starts here */
 /* the shared variables are listed just to remember about data races! */
 /* other variable shaed by default: refatmpos,atmpos,phi,Ahelix,Bhelix */
-//pragma omp parallel shared(SDip,CDip,SLor,CLor,SCont,CCont,scx,scy,scz,in_positions)
-{
-//pragma omp for collapse(3) private(i,j,k,a,r,n,c,s,u,crysvec,onebrcube,atmpos)
-    for (i = 0; i < scx; ++i)
+/*pragma omp parallel shared(SDip,CDip,SLor,CLor,SCont,CCont,scx,scy,scz,in_positions) */
     {
-        for (j = 0; j < scy; ++j)
+/*pragma omp for collapse(3) private(i,j,k,a,r,n,c,s,u,crysvec,onebrcube,atmpos) */
+        for (i = 0; i < scx; ++i)
         {
-            for (k = 0; k < scz; ++k)
+            for (j = 0; j < scy; ++j)
             {
-                /* loop over atoms */
-                for (a = 0; a < natoms; ++a)
+                for (k = 0; k < scz; ++k)
                 {
-
-                    /* atom position in reduced coordinates */
-                    aux.x() = ( atomicPositions.col(a).x() + (T) i) / (T) scx;
-                    aux.y() = ( atomicPositions.col(a).y() + (T) j) / (T) scy;
-                    aux.z() = ( atomicPositions.col(a).z() + (T) k) / (T) scz;
-
-                    /* go to cartesian coordinates (in Angstrom!) */
-                    Crys2Cart(sc_lat, aux, atomposCart, false);
-
-                    /* difference between atom pos and muon pos (cart coordinates) */
-                    r = atomposCart - muonposCart;
-
-                    n = r.norm();
-                    if (n < radius)
+                    /* loop over atoms */
+                    for (a = 0; a < natoms; ++a)
                     {
 
-                        /* unit vector */
-                        u = r.normalized();
-                        onebrcube = 1.0/pow(n,3);
+                        /* atom position in reduced coordinates */
+                        aux.x() = ( atomicPositions.col(a).x() + (T) i) / (T) scx;
+                        aux.y() = ( atomicPositions.col(a).y() + (T) j) / (T) scy;
+                        aux.z() = ( atomicPositions.col(a).z() + (T) k) / (T) scz;
 
-                        // (atomposCart - muonposCart)  - refatomposCart
-                        aux = r - refatomposCart.col(a);
+                        /* go to cartesian coordinates (in Angstrom!) */
+                        Crys2Cart(sc_lat, aux, atomposCart, false);
 
-                        KdotR =  KCart.dot(aux); // R \dot K (done in cartesian coordinates)
+                        /* difference between atom pos and muon pos (cart coordinates) */
+                        r = atomposCart - muonposCart;
 
-                        /* */
-                        c = cos (KdotR + 2.0*M_PI*phi(a) ) ;
-                        s = sin (KdotR + 2.0*M_PI*phi(a) ) ;
-
-                        /* sum all data */
-                        //pragma omp critical(dipolar)
+                        n = r.norm();
+                        if (n < radius)
                         {
-                            /* Dipolar */
-                            CDip.col(a) += c * onebrcube * (u*3.0*Ahelix.col(a).dot(u) - Ahelix.col(a) )
-                                         + s * onebrcube * (u*3.0*Bhelix.col(a).dot(u) - Bhelix.col(a) );
 
-                            SDip.col(a) += s * onebrcube * (u*3.0*Ahelix.col(a).dot(u) - Ahelix.col(a) )
-                                         - c * onebrcube * (u*3.0*Bhelix.col(a).dot(u) - Bhelix.col(a) );
+                            /* unit vector */
+                            u = r.normalized();
+                            onebrcube = 1.0/pow(n,3);
 
-                        }
-                        //pragma omp critical(lorentz)
-                        {
-                            /* Lorentz */
-                            CLor.col(a) += c * Ahelix.col(a) + s*Bhelix.col(a);
-                            SLor.col(a) += s * Ahelix.col(a) - c*Bhelix.col(a);
+                            /* (atomposCart - muonposCart)  - refatomposCart */
+                            aux = r - refatomposCart.col(a);
 
-                        }
-                        /* Contact */
-                        if (n < cont_radius) {
-                            //pragma omp critical(contact)
+                            KdotR =  KCart.dot(aux);/* R \dot K (done in cartesian coordinates) */
+
+                            /* */
+                            c = cos (KdotR + 2.0*M_PI*phi(a) );
+                            s = sin (KdotR + 2.0*M_PI*phi(a) );
+
+                            /* sum all data */
+                            /*pragma omp critical(dipolar) */
                             {
-                                aux = stagmom(a) * (c * Ahelix.col(a) + s * Bhelix.col(a));
-                                CCont.add_element(pow(n,CONT_SCALING_POWER), aux);
+                                /* Dipolar */
+                                CDip.col(a) += c * onebrcube * (u*3.0*Ahelix.col(a).dot(u) - Ahelix.col(a) )
+                                               + s * onebrcube * (u*3.0*Bhelix.col(a).dot(u) - Bhelix.col(a) );
 
-                                aux = stagmom(a) * (s * Ahelix.col(a) - c * Bhelix.col(a));
-                                SCont.add_element(pow(n,CONT_SCALING_POWER), aux);
+                                SDip.col(a) += s * onebrcube * (u*3.0*Ahelix.col(a).dot(u) - Ahelix.col(a) )
+                                               - c * onebrcube * (u*3.0*Bhelix.col(a).dot(u) - Bhelix.col(a) );
+
+                            }
+                            /*pragma omp critical(lorentz) */
+                            {
+                                /* Lorentz */
+                                CLor.col(a) += c * Ahelix.col(a) + s*Bhelix.col(a);
+                                SLor.col(a) += s * Ahelix.col(a) - c*Bhelix.col(a);
+
+                            }
+                            /* Contact */
+                            if (n < cont_radius) {
+                                /*pragma omp critical(contact) */
+                                {
+                                    aux = stagmom(a) * (c * Ahelix.col(a) + s * Bhelix.col(a));
+                                    CCont.add_element(pow(n,CONT_SCALING_POWER), aux);
+
+                                    aux = stagmom(a) * (s * Ahelix.col(a) - c * Bhelix.col(a));
+                                    SCont.add_element(pow(n,CONT_SCALING_POWER), aux);
+                                }
                             }
                         }
                     }
@@ -624,7 +622,6 @@ void  FastIncom(const MatX& atomicPositions,
             }
         }
     }
-}
 
     angle=0;
     /* for contact field evaluation */
@@ -633,87 +630,87 @@ void  FastIncom(const MatX& atomicPositions,
     NofM = 0; /* Number of moments considered */
     SumOfWeights = 0;
 
-// pragma omp parallel sections private(angn,angle,BDip,BLor,BCont,i) firstprivate(CBCont,SBCont,NofM,SumOfWeights)
-{
-    /* first portion, dipolar fields and Lorentz */
-    // pragma omp section
+/* pragma omp parallel sections private(angn,angle,BDip,BLor,BCont,i) firstprivate(CBCont,SBCont,NofM,SumOfWeights) */
     {
-        for (angn = 0; angn < in_nangles; ++angn)
+        /* first portion, dipolar fields and Lorentz */
+        /* pragma omp section */
         {
-            angle = 2*M_PI*((T) angn / (T) in_nangles);
-
-            /*  === Dipolar Field === */
-            BDip = Vec3::Zero();
-            /* loop over atoms */
-            for (a = 0; a < natoms; ++a)
+            for (angn = 0; angn < in_nangles; ++angn)
             {
-                BDip +=  stagmom(a) * (cos(angle) * CDip.col(a) - sin(angle) * SDip.col(a));
-            }
+                angle = 2*M_PI*((T) angn / (T) in_nangles);
 
-            BD.col(angn) = 0.9274009 * BDip; /* to tesla units */
+                /*  === Dipolar Field === */
+                BDip = Vec3::Zero();
+                /* loop over atoms */
+                for (a = 0; a < natoms; ++a)
+                {
+                    BDip +=  stagmom(a) * (cos(angle) * CDip.col(a) - sin(angle) * SDip.col(a));
+                }
+
+                BD.col(angn) = 0.9274009 * BDip; /* to tesla units */
 
 
-            /*  === Lorentz Field === */
-            BLor = Vec3::Zero();
-            /* loop over atoms */
-            for (a = 0; a < natoms; ++a)
-            {
-                BLor +=  stagmom(a) * (cos(angle) * CLor.col(a) - sin(angle) * SLor.col(a));
-            }
+                /*  === Lorentz Field === */
+                BLor = Vec3::Zero();
+                /* loop over atoms */
+                for (a = 0; a < natoms; ++a)
+                {
+                    BLor +=  stagmom(a) * (cos(angle) * CLor.col(a) - sin(angle) * SLor.col(a));
+                }
 
-            BL.col(angn) = 0.33333333333*11.654064*(3./(4.*M_PI*pow(radius,3))) * BLor;
-        }
-    }
-
-    BC.setZero();
-    /* second portion, contact fields */
-    //pragma omp section
-    {
-        /*  === Contact Field === */
-
-        for (i=0; i < nnn_for_cont; i++) {
-            if ((CCont.ranks(i) >= 0.0) && (fabs(CCont.ranks(i) - SCont.ranks(i))<EPS)) {
-                CBCont += (1./CCont.ranks(i)) * CCont.elements.col(i);
-                SBCont += (1./SCont.ranks(i)) * SCont.elements.col(i);
-                SumOfWeights += 1./CCont.ranks(i);
-                NofM++;
-            } else {
-                printf("Something VERY odd ! ranks 1: %e ranks 2: %e \n", CCont.ranks(i) , SCont.ranks(i) );
+                BL.col(angn) = 0.33333333333*11.654064*(3./(4.*M_PI*pow(radius,3))) * BLor;
             }
         }
 
-        /* (2 magnetic_constant/3)⋅1bohr_magneton   = ((2 ⋅ magnetic_constant) ∕ 3) ⋅ (1 ⋅ bohr_magneton) */
-        /*   ≈ 7.769376E-27((g⋅m^3) ∕ (A⋅s^2)) */
-        /*   ≈ 7.769376 T⋅Å^3 */
+        BC.setZero();
+        /* second portion, contact fields */
+        /*pragma omp section */
+        {
+            /*  === Contact Field === */
 
-        for (angn = 0; angn < in_nangles; ++angn) {
+            for (i=0; i < nnn_for_cont; i++) {
+                if ((CCont.ranks(i) >= 0.0) && (fabs(CCont.ranks(i) - SCont.ranks(i))<EPS)) {
+                    CBCont += (1./CCont.ranks(i)) * CCont.elements.col(i);
+                    SBCont += (1./SCont.ranks(i)) * SCont.elements.col(i);
+                    SumOfWeights += 1./CCont.ranks(i);
+                    NofM++;
+                } else {
+                    printf("Something VERY odd ! ranks 1: %e ranks 2: %e \n", CCont.ranks(i), SCont.ranks(i) );
+                }
+            }
 
-            angle = 2*M_PI*((T) angn / (T) in_nangles);
+            /* (2 magnetic_constant/3)⋅1bohr_magneton   = ((2 ⋅ magnetic_constant) ∕ 3) ⋅ (1 ⋅ bohr_magneton) */
+            /*   ≈ 7.769376E-27((g⋅m^3) ∕ (A⋅s^2)) */
+            /*   ≈ 7.769376 T⋅Å^3 */
 
-            if (NofM >0) {
-                BC.col(angn) = (1./SumOfWeights) * 7.769376 * (cos(angle) * CBCont - sin(angle) * SBCont);
-            } /* otherwise is zero anyway! */
+            for (angn = 0; angn < in_nangles; ++angn) {
+
+                angle = 2*M_PI*((T) angn / (T) in_nangles);
+
+                if (NofM >0) {
+                    BC.col(angn) = (1./SumOfWeights) * 7.769376 * (cos(angle) * CBCont - sin(angle) * SBCont);
+                } /* otherwise is zero anyway! */
+            }
         }
-    }
-} /* end of omp parallel sections */
+    } /* end of omp parallel sections */
 
 }
 
 /**
  * This function calculates dipolar tensors in fractional coordinates.
- * 
- * @param in_positions positions of the magnetic atoms in fractional 
+ *
+ * @param in_positions positions of the magnetic atoms in fractional
  *         coordinates. Each position is specified by the three
  *         coordinates and the 1D array must be 3*size long.
  * @param in_muonpos position of the muon in fractional coordinates
  * @param in_supercell extension of the supercell along the lattice vectors.
- * @param in_cell lattice cell. The three lattice vectors should be entered 
+ * @param in_cell lattice cell. The three lattice vectors should be entered
  *         with the following order: a_x, a_y, a_z, b_z, b_y, b_z, c_x, c_y, c_z.
  * @param in_radius Lorentz sphere radius
  * @param in_natoms: number of atoms in the lattice.
- * @param out_field the dipolar tensor as 1D array with 9 entries: 
+ * @param out_field the dipolar tensor as 1D array with 9 entries:
  *          T_11, T_12, T_13, T_21, T_22, T_23, T_31, T_32, T_33
- *          \f{equation}{ T= 
+ *          \f{equation}{ T=
  *               \begin{matrix}
  *               1 & 2 & 3 \\
  *               4 & 5 & 6 \\
@@ -722,32 +719,32 @@ void  FastIncom(const MatX& atomicPositions,
  *           \f}
  */
 void DT(MatX& atomicPositions,  MatX& muonpos,
-          int scx, int scy, int scz, 
-          Mat3 lattice, const double radius,
-          MatX& DT) 
+        int scx, int scy, int scz,
+        Mat3 lattice, const double radius,
+        MatX& DT)
 {
 
     unsigned int i,j,k,a; /* counters for supercells */
-    
+
     MatX atomposCart;
     Vec3 muonposCart;
     Vec3 r, aux, R, r_mu;
     Mat3 sc_lat;
-    
+
     double n;
     double onebrcube; /* 1/r^3 */
     double onebrfive; /* 1/r^5 */
-    
-    
+
+
     Mat3 A, D;
-    
+
     unsigned int atom;     /* counter for atoms */
 
-    
+
     aux << (double) scx, (double) scy, (double) scz;
     sc_lat = lattice * aux.asDiagonal();
 
-    // Get the position of the central cell
+    /* Get the position of the central cell */
     aux << (T) (scx/2), (T) (scy/2), (T) (scz/2);
     Crys2Cart(lattice, aux, R, false);
 
@@ -779,7 +776,7 @@ void DT(MatX& atomicPositions,  MatX& muonpos,
             for (k = 0; k < scz; ++k)
             {
                 r.z() = ( (T) k );
-                
+
                 /* Radius from origin of cell position under consideration (in Cartesian coordinates) */
                 Crys2Cart(lattice, r, R, false);
 
@@ -790,8 +787,8 @@ void DT(MatX& atomicPositions,  MatX& muonpos,
                     /* atom position in cartesian coordinates */
                     aux = R + atomposCart.col(a);
                     r_mu = aux - muonposCart;
-                    
-                    
+
+
                     /* norm of the distance vector between the muon and the atom */
                     n = r_mu.norm();
 
@@ -802,27 +799,27 @@ void DT(MatX& atomicPositions,  MatX& muonpos,
                         /* vector */
                         onebrcube = 1.0/pow(n,3);
                         onebrfive = 1.0/pow(n,5);
-                        
+
 
                         /* See uSR bible (Yaouanc Dalmas De Reotier, page 81) */
                         /* alpha = x */
                         D.col(0).x() = -onebrcube+3.0*r_mu.x()*r_mu.x()*onebrfive;
                         D.col(0).y() = 3.0*r_mu.x()*r_mu.y()*onebrfive;
                         D.col(0).z() = 3.0*r_mu.x()*r_mu.z()*onebrfive;
-                        
+
                         /* alpha = y */
                         D.col(1).x() = D.col(0).y();
                         D.col(1).y() = -onebrcube+3.0*r_mu.y()*r_mu.y()*onebrfive;
                         D.col(1).z() = 3.0*r_mu.y()*r_mu.z()*onebrfive;
-                        
+
                         /* alpha = z */
                         D.col(2).x() = D.col(0).z();
                         D.col(2).y() = D.col(1).z(); /* this is pretty stupid */
                         D.col(2).z() = -onebrcube+3.0*r_mu.z()*r_mu.z()*onebrfive;
-                        
-                        A += D ;
 
-                        
+                        A += D;
+
+
                     }
                 }
             }
@@ -834,52 +831,159 @@ void DT(MatX& atomicPositions,  MatX& muonpos,
 
 }
 
+/**
+ * This function calculates the moments of magnetic atoms in Cartesian coordinates.
+ * It returns the atom number, its position in cartesian coordinates and
+ * the corresponding magnetic moment in mu_B.
+ *
+ * @param latt Lattice type.
+ * @return number of magnetic atoms found.
+ */
+int moments(Lattice latt,
+            unsigned int scx, unsigned int scy, unsigned int scz,
+            unsigned int rangx, unsigned int rangy, unsigned int rangz,
+            const Vec3& axis, const int nAngles,
+            RefIVecX AtomNum, RefMatX Pos, RefMatX Moms)
+{
 
-// ----------------
-// Compatibility interface
-// ----------------
+    /*supercell sizes */
+    unsigned int i,j,k; /* counters for supercells */
+
+    MatX atomMoms, atomposCart;
+    Vec3 R, r;
+    Vec3 KCart;
+
+    Vec3 m;   /*magnetic moment of atom */
+    Vec3 u;   /* unit vector */
+    Vec3 aux;
+    unsigned int center_x, center_y, center_z;
+
+    Mat3 lattice;
+    Mat3 recLattice;
+    Mat3 unitRotMat;
+
+    T n;   /* contains norm of vectors */
+    T onebrcube; /* 1/r^3 */
+
+
+    unsigned int a;     /* counter for atoms */
+
+    bool have_moments_for_cell = false;
+
+    unitRotMat = AngleAxisd(2.0*M_PI/nAngles, axis);
+
+    latt.GetCell(lattice);
+
+    /* Calculate reciprocal lattice */
+    recips(lattice, recLattice);
+
+    /* Propagation vector in Cartesian coordinates */
+    Crys2Cart(recLattice, latt.K, KCart, false);
+
+    /* Cell in the middle */
+    center_x = scx/2; center_y = scy/2; center_z = scz/2;
+    aux << (T) (scx/2), (T) (scy/2), (T) (scz/2);
+    Crys2Cart(lattice, aux, R, false);
+
+    /* === Atoms data === */
+    atomposCart.resize(3, latt.nAtoms);
+    atomMoms.resize(3, latt.nAtoms);
+/*    occupations.resize(latt.nAtoms); */
+
+    /* Atomic positions: reduced coordinates -> Cartesian Coordinates */
+    Crys2Cart(lattice, latt.atomPosFrac, atomposCart, false);
+
+    /* === Fields data === */
+    AtomNum.setZero();
+    Moms.setZero();
+    Pos.setZero();
+    int l = 0;
+    /* === LOOP over SUPERCELL === */
+    for (i = center_x-rangx; i <= center_x+rangx; ++i)
+    {
+        r.x() = ( (T) i );
+        for (j = center_y-rangy; j <= center_y+rangy; ++j)
+        {
+            r.y() = ( (T) j );
+            for (k = center_z-rangz; k <= center_z+rangz; ++k)
+            {
+                r.z() = ( (T) k );
+
+                /* Cell position in Cartesian coordinates */
+                Crys2Cart(lattice, r, R, false);
+
+                /*latt.MaterializeOccupationsInCell(occupations); */
+                FCtoMagMom(latt.FC, KCart, latt.Phi, R, atomMoms);
+                /*if (occupations(a) == 0) continue; */
+
+                for (a = 0; a < atomposCart.cols(); ++a)
+                {
+                    m = atomMoms.col(a);
+                    if (m.norm() <= EPS) continue;
+
+                    for (int iang = 0; iang < nAngles; iang++) {
+
+                        aux = R + atomposCart.col(a);
+                        Pos.col(l) = aux;
+                        Moms.col(l) = m;
+                        AtomNum(l) = a;
+                        l++;
+
+                        /* increment by rotation */
+                        if(nAngles > 1) m = unitRotMat*m;
+
+                    } /* loop on angles */
+
+
+                } /* for each atom in unitcell */
+            } /* nz */
+        } /* ny */
+    } /* nx */
+    return l;
+}
+
+
+/* ---------------- */
+/* Compatibility interface */
+/* ---------------- */
 
 namespace py = pybind11;
 
-py::tuple  Fields(std::string s,  MatX& atomicPositions,  CMatX& FC, 
-              MatX& K,  VecX& Phi,  
-           MatX& muonpos, const IVec3& sc,  Mat3& unitCell,
-          const double radius, const unsigned int nnn_for_cont, const double cont_radius,
-          const int nangles=1, Vec3& axis=EMPTY)
+py::tuple  Fields(std::string s,  MatX& atomicPositions,  CMatX& FC,
+                  Vec3& K,  VecX& Phi,  MatX& muonpos, const IVec3& sc,  Mat3& unitCell,
+                  const double radius, const unsigned int nnn_for_cont, const double cont_radius,
+                  const int nangles=1, Vec3& axis=EMPTY)
 {
-    
-    
+
+
     atomicPositions.transposeInPlace();
     FC.transposeInPlace();
-    K.transposeInPlace();
-    //Phi.transposeInPlace();
-    //std::cout << "nMuons before"<< muonpos.cols() << std::endl;
+    /* K and Phi are vectors and do not need to be transposed */
+
     if (muonpos.cols() > 1) muonpos.transposeInPlace();
     unitCell.transposeInPlace();
-    
-    
+
     Lattice l = Lattice(unitCell, atomicPositions, Phi, FC, K);
-    
-    // Set data dimensions
+
+    /* Set data dimensions */
     int nMuons = muonpos.cols();
-    //std::cout << "nMuons "<< nMuons << std::endl;
-    
-    
-    //std::cout << "atomicPositions "<< atomicPositions.rows() << " " << atomicPositions.cols() << std::endl;
+
+
+    /*std::cout << "atomicPositions "<< atomicPositions.rows() << " " << atomicPositions.cols() << std::endl; */
 
     MatX BD(3, nMuons*nangles), BL(3, nMuons*nangles), BC(3, nMuons*nangles);
     if (s=="s" || s=="simple")
     {
         DipoleSumMany(l, muonpos, sc(0), sc(1), sc(2), radius,  nnn_for_cont, cont_radius,
-                        axis, nangles,
-                        BC,  BD,  BL);
+                      axis, nangles,
+                      BC,  BD,  BL);
     }
 
     if (s=="r" || s=="rotate")
     {
         DipoleSumMany(l, muonpos, sc(0), sc(1), sc(2), radius,  nnn_for_cont, cont_radius,
-                        axis, nangles,
-                        BC,  BD,  BL);
+                      axis, nangles,
+                      BC,  BD,  BL);
     }
 
 
@@ -887,13 +991,13 @@ py::tuple  Fields(std::string s,  MatX& atomicPositions,  CMatX& FC,
         for (int i=0; i<nMuons; i++)
         {
             FastIncom(atomicPositions, FC, K, Phi, muonpos.col(i),  sc(0), sc(1), sc(2),
-                    unitCell, radius, nnn_for_cont, cont_radius, nangles,
-                    BC.block(0, i * nangles, 3,  nangles ),
-                    BD.block(0, i * nangles, 3,  nangles ),
-                    BL.block(0, i * nangles, 3,  nangles ));            
+                      unitCell, radius, nnn_for_cont, cont_radius, nangles,
+                      BC.block(0, i * nangles, 3,  nangles ),
+                      BD.block(0, i * nangles, 3,  nangles ),
+                      BL.block(0, i * nangles, 3,  nangles ));
         }
     }
-    
+
     BC.transposeInPlace();
     BD.transposeInPlace();
     BL.transposeInPlace();
@@ -901,32 +1005,30 @@ py::tuple  Fields(std::string s,  MatX& atomicPositions,  CMatX& FC,
     return py::make_tuple ( BC, BD, BL);
 }
 
-py::tuple Simple( MatX& atomicPositions,  CMatX& FC, 
-              MatX& K,  VecX& Phi,  
-           MatX& muonpos, const IVec3& sc,  Mat3& unitCell,
-          const double radius, const unsigned int nnn_for_cont, const double cont_radius)
+py::tuple Simple( MatX& atomicPositions,  CMatX& FC,
+                  Vec3& K,  VecX& Phi,
+                  MatX& muonpos, const IVec3& sc,  Mat3& unitCell,
+                  const double radius, const unsigned int nnn_for_cont, const double cont_radius)
 {
 
     atomicPositions.transposeInPlace();
     FC.transposeInPlace();
-    K.transposeInPlace();
-    //Phi.transposeInPlace();
+    /* K and Phi are vectors and do not need to be transposed */
 
     if (muonpos.cols() > 1) muonpos.transposeInPlace();
     unitCell.transposeInPlace();
-    
-    Lattice l = Lattice(unitCell, atomicPositions, Phi, FC, K);
-    
 
-    
-    // Set data dimensions
+    Lattice l = Lattice(unitCell, atomicPositions, Phi, FC, K);
+
+
+    /* Set data dimensions */
     int nMuons = muonpos.cols();
-    
+
     MatX BD(3, nMuons), BL(3, nMuons), BC(3, nMuons);
-    
+
     Vec3 axis;
     DipoleSumMany(l, muonpos, sc(0), sc(1), sc(2), radius,  nnn_for_cont, cont_radius,
-                    axis, 1, BC,  BD,  BL);
+                  axis, 1, BC,  BD,  BL);
 
     BC.transposeInPlace();
     BD.transposeInPlace();
@@ -934,50 +1036,95 @@ py::tuple Simple( MatX& atomicPositions,  CMatX& FC,
     return py::make_tuple ( BC, BD, BL);
 }
 
-Mat3 DipolarTensor( MatX& atomicPositions,  
-           MatX& muonpos, const IVec3& sc,  Mat3& unitCell,
-          const double radius)
+Mat3 DipolarTensor( MatX& atomicPositions,
+                    MatX& muonpos, const IVec3& sc,  Mat3& unitCell,
+                    const double radius)
 {
 
     atomicPositions.transposeInPlace();
     unitCell.transposeInPlace();
-    if (muonpos.cols() > 1) std::cout << "nMuons> 1 not implemented "<<std::endl;
-    
-    MatX DTr(3,3);
-    
-    DT(atomicPositions, muonpos, sc(0), sc(1), sc(2), unitCell, radius, DTr);
 
+    if (muonpos.cols() > 1) throw std::invalid_argument( "Not implemented for multiple muons at once" );
+
+    MatX DTr(3,3);
+    DT(atomicPositions, muonpos, sc(0), sc(1), sc(2), unitCell, radius, DTr);
     DTr.transposeInPlace();
 
     return DTr;
 }
 
-// ----------------
-// Python interface
-// ----------------
+py::tuple Moments( MatX& atomicPositions,  CMatX& FC,
+                   Vec3& K,  VecX& Phi,
+                   const IVec3& sc, const IVec3& rsc, Mat3& unitCell,
+                   const int nangles=1, Vec3& axis=EMPTY)
+{
+
+    atomicPositions.transposeInPlace();
+    FC.transposeInPlace();
+    unitCell.transposeInPlace();
+
+    /* Parse lattice datils */
+    Lattice l = Lattice(unitCell, atomicPositions, Phi, FC, K);
+
+    /* Validate invalid input */
+    if ( rsc(0) < 0 ) throw std::invalid_argument( "Negative value for relative cell x" );
+    if ( rsc(1) < 0 ) throw std::invalid_argument( "Negative value for relative cell y" );
+    if ( rsc(2) < 0 ) throw std::invalid_argument( "Negative value for relative cell z" );
+
+    /* Allocate space for positions, magnetic moment and atom number correspondece */
+    MatX Pos(3, (2*rsc(0)+1)*(2*rsc(1)+1)*(2*rsc(2)+1)*l.nAtoms*nangles),
+    Moms(3, (2*rsc(0)+1)*(2*rsc(1)+1)*(2*rsc(2)+1)*l.nAtoms*nangles);
+    IVecX AtomNum((2*rsc(0)+1)*(2*rsc(1)+1)*(2*rsc(2)+1)*l.nAtoms*nangles);
+
+    int n = moments(l, sc(0), sc(1), sc(2), rsc(0), rsc(1), rsc(2), axis,  nangles, AtomNum, Pos, Moms);
+
+    AtomNum.conservativeResize(n);
+    Pos.conservativeResize(3, n);
+    Moms.conservativeResize(3, n);
+
+    Pos.transposeInPlace();
+    Moms.transposeInPlace();
+    return py::make_tuple ( AtomNum, Pos, Moms);
+}
+
+/* ---------------- */
+/* Python interface */
+/* ---------------- */
 
 using namespace pybind11::literals;
 
 void init_dipolesum(py::module &m) {
     m.def("DipoleSum", &DipoleSum);
+
     m.def("DipoleSumMany", &DipoleSumMany);
-    m.def("Fields", &Fields, 
-            "Gets you fields!", 
-            "s"_a,  "atomicPositions"_a, 
-            "FC"_a, "K"_a, "Phi"_a, 
-            "muonpos"_a, "sc"_a, "unitCell"_a, 
-            "radius"_a, "nnn_for_cont"_a, 
-            "cont_radius"_a, 
-            "nangles"_a=1, "axis"_a=EMPTY);
+
+    m.def("Fields", &Fields,
+          "Gets you fields!",
+          "s"_a,  "atomicPositions"_a,
+          "FC"_a, "K"_a, "Phi"_a,
+          "muonpos"_a, "sc"_a, "unitCell"_a,
+          "radius"_a, "nnn_for_cont"_a,
+          "cont_radius"_a,
+          "nangles"_a=1, "axis"_a=EMPTY);
+
     m.def("Simple", &Simple);
+
+    m.def("Moments", &Moments,
+          "Evaluate moments in given supercell "
+          "for rsc cells before and after the cell "
+          "containing the muon",
+          "atomicPositions"_a,
+          "FC"_a, "K"_a, "Phi"_a, "sc"_a, "rsc"_a, "unitCell"_a,
+          "nangles"_a=1, "axis"_a=EMPTY);
+
     m.def("DipolarTensor", &DipolarTensor,py::return_value_policy::copy);
 }
 
-///////// pybind11::gil_scoped_release release;
-///////// 
-///////// while (true)
-///////// {
-/////////     // do something and break
-///////// }
-///////// 
-///////// pybind11::gil_scoped_acquire acquire;
+/*/////// pybind11::gil_scoped_release release; */
+/*/////// */
+/*/////// while (true) */
+/*/////// { */
+/*///////     // do something and break */
+/*/////// } */
+/*/////// */
+/*/////// pybind11::gil_scoped_acquire acquire; */
