@@ -1,5 +1,6 @@
 # find Eigen library
-find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+#find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+find_package ( Eigen3 REQUIRED )
 include_directories( ${EIGEN3_INCLUDE_DIRS} )
 find_package (pybind11 2.0 REQUIRED NO_MODULE)
 
