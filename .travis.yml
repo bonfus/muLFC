@@ -8,6 +8,12 @@ python:
   - "3.8"
   - "3.8-dev"  # 3.8 development branch
   - "nightly"  # nightly build
+# install eigen
+before_script:
+  - sudo apt-get install libeigen3-dev
+  - mkdir build
+  - cd build
+  - cmake ..
 # command to install dependencies
 install:
   - pip install -r requirements.txt
