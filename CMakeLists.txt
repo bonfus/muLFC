@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.2)
 
 project (LFC)
 
@@ -17,6 +17,15 @@ IF(USE_OpenMP)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   ENDIF()
 ENDIF()
+
+# find Eigen library
+message(STATUS "Trying to include Eigen library")
+include(eigen)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
+# find pybind11
+add_subdirectory(third-party/pybind11)
+#find_package (pybind11 2.0 REQUIRED NO_MODULE)
 
 add_subdirectory (src)
 
