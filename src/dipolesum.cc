@@ -24,10 +24,14 @@
 Vec3 EMPTY = Eigen::Vector3d::Zero();
 
 /**
-    Returns magnetic moments from Fourier Components given for the cell
-    in position R given
+    Returns magnetic moments from Fourier Components for the cell
+    in position R given.
 
-    @param FC fourier components for all atoms
+    @param FC Fourier components for all atoms
+    @param KCart propagation vector in Cartesian coordinates
+    @param phi a vector with the phase associated with each Fourier Component.
+    @param R position of the cell with respect to origin.
+    @param m output magnetic moments
  */
 void FCtoMagMom(const CMatX& FC, const Vec3 KCart, const VecX& phi, const Vec3 R, RefMatX m)
 {
