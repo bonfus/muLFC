@@ -11,6 +11,7 @@ python:
 # install eigen
 before_script:
   - sudo apt-get install libeigen3-dev
+  - git submodule update --init --remote
 # command to install dependencies
 install:
   - pip install -r requirements.txt
