@@ -29,3 +29,7 @@ add_subdirectory(third-party/pybind11)
 
 add_subdirectory (src)
 
+# need eigen before we start compiling the module
+if (NOT EIGEN3_FOUND)
+add_dependencies(lfclib eigen3)
+endif()

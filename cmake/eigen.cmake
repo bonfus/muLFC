@@ -3,7 +3,7 @@ include(ExternalProject)
 include(CMakePushCheckState)
 
 # Check for Eigen
-find_package(Eigen3 3.0)
+find_package(Eigen3 3.0 QUIET)
 #find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 if(EIGEN3_FOUND)
@@ -26,11 +26,11 @@ if(EIGEN3_FOUND)
       Eigen::MatrixXd m_invsqrt = eig.operatorInverseSqrt();
       std::cout << m_invsqrt << std::endl;
     }"
-    EIGEN_COMPILES)
+    EIGEN3_COMPILES)
       
   cmake_pop_check_state()
 
-  if (NOT EIGEN_COMPILES)
+  if (NOT EIGEN3_COMPILES)
     message(FATAL_ERROR "Eigen found at ${EIGEN3_INCLUDE_DIR}, but could not compile test program")
   endif()
 
