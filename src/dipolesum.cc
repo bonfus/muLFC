@@ -86,7 +86,7 @@ void  DipoleSum(Lattice latt,
     latt.GetCell(lattice);
 
     /* Calculate reciprocal lattice */
-    recips(lattice, recLattice);
+    latt.GetReciprocalCell(recLattice);
 
     /* Propagation vector in Cartesian coordinates */
     Crys2Cart(recLattice, latt.K, KCart);
@@ -265,7 +265,7 @@ void  DipoleSumMany(Lattice latt,
     latt.GetCell(lattice);
 
     /* Calculate reciprocal lattice */
-    recips(lattice, recLattice);
+    latt.GetReciprocalCell(recLattice);
 
     /* Propagation vector in Cartesian coordinates */
     Crys2Cart(recLattice, latt.K, KCart);
@@ -277,7 +277,7 @@ void  DipoleSumMany(Lattice latt,
     /* muon position: reduced coordinates -> Cartesian Coordinates */
     Crys2Cart(lattice, muonpos, muonposCart);
 
-    /* Cartesian coordinates in the center of the supercell */
+    /* Cartesian coordinates for a muon in the center of the supercell */
     muonposCart.colwise() += R;
 
     /* === Atoms data === */
@@ -975,6 +975,9 @@ py::tuple Fields(std::string s,  MatX& atomicPositions,  CMatX& FC,
     /*std::cout << "atomicPositions "<< atomicPositions.rows() << " " << atomicPositions.cols() << std::endl; */
 
     MatX BD(3, nMuons*nangles), BL(3, nMuons*nangles), BC(3, nMuons*nangles);
+
+    // pybind11::scoped_interpreter interp;
+    // pybind11::gil_scoped_release release;
     if (s=="s" || s=="simple")
     {
         DipoleSumMany(l, muonpos, sc(0), sc(1), sc(2), radius,  nnn_for_cont, cont_radius,
@@ -995,8 +998,10 @@ py::tuple Fields(std::string s,  MatX& atomicPositions,  CMatX& FC,
                       BL.block(0, i * nangles, 3,  nangles ));
         }
     } else {
+        // pybind11::gil_scoped_acquire acquire;
         throw std::invalid_argument( "Calulation type not implemented" );
     }
+    // pybind11::gil_scoped_acquire acquire;
 
     BC.transposeInPlace();
     BD.transposeInPlace();
@@ -1047,7 +1052,14 @@ Mat3 DipolarTensor( MatX& atomicPositions,
     if (muonpos.cols() > 1) throw std::invalid_argument( "Not implemented for multiple muons at once" );
 
     MatX DTr(3,3);
+
+    //pybind11::scoped_interpreter interp;
+    //pybind11::gil_scoped_acquire acquire;
+
     DT(atomicPositions, muonpos, sc(0), sc(1), sc(2), unitCell, radius, DTr);
+
+    //pybind11::gil_scoped_release release;
+
     DTr.transposeInPlace();
 
     return DTr;

@@ -62,7 +62,7 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 setup(name='mulfc',
-      version='0.0.2',
+      version='0.0.3',
       description=desc,
       long_description=desc,
       author='Pietro Bonfa',
