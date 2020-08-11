@@ -5,7 +5,7 @@
  * @brief  Pile of vec3
  *
  *
- * 
+ *
  *
  * This file defines a set of functions to deal with a pile struct.
  * A pile is a list of (fixed) n elements with positive definite ranks.
@@ -21,17 +21,17 @@
 
 /**
  * This function initializes the pile introducing nElements zero vectors
- * and setting the rank to -1. Since ranks must be positive, all these 
+ * and setting the rank to -1. Since ranks must be positive, all these
  * elements will be replaced.
- * 
+ *
  */
 pile::pile(unsigned int nEls)
 {
 	nElements = nEls;
 	ranks.resize(nElements);
 	elements.resize(3,nElements);
-  
-  
+
+
   ranks.setOnes();
   ranks *= -1.0;
   elements.setZero();
@@ -40,7 +40,7 @@ pile::pile(unsigned int nEls)
 /**
  * This function resets nElements to zero vectors and their rank to -1.
  * Since ranks must be positive, all these elements will be replaced.
- * 
+ *
  */
 void pile::reset()
 {
@@ -54,7 +54,7 @@ void pile::reset()
  * to the pile p.
  * If yes shifts all elements with lower rank by one position, removes
  * the last one, and adds the vector.
- * 
+ *
  */
 void pile::add_element(double rank, const Vec3& v)
 {
@@ -79,7 +79,7 @@ void pile::add_element(double rank, const Vec3& v)
  * This function moves the element in position pos down by one position.
  * The implicit assumption is that the element at position pos will be
  * overwritten.
- * If nElements = 1 nothing should be done. Otherwise copy all the 
+ * If nElements = 1 nothing should be done. Otherwise copy all the
  * elements form nElements-2-i to nElements-1-i
  */
 void pile::move_elements_from_position(unsigned int pos)
@@ -99,9 +99,9 @@ void pile::move_elements_from_position(unsigned int pos)
 
 
 /**
- * 
- * Cleanup allocated memory 
- * 
+ *
+ * Cleanup allocated memory
+ *
  */
 pile::~pile()
 {

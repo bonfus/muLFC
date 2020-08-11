@@ -14,7 +14,7 @@ PYBIND11_MODULE(lfclib, m) {
 #else
 #error No version specified
 #endif
-    
+
     init_lattice(m);
     init_dipolesum(m);
 }

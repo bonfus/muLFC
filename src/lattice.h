@@ -11,6 +11,7 @@ class Lattice {
   public:
     Lattice(const Mat3& unitCell,
             const MatX& atomicPositions,
+//            const IVecX& atomicNumbers,
             const VecX& atomicOccupations,
             const IVecX& atomicOccupationsGroups,
             const MatX& sitesCorrelation,
@@ -19,6 +20,7 @@ class Lattice {
             const Vec3& _K);
     Lattice(const Mat3& unitCell, 
                   const MatX& atomicPositions, 
+//                  const IVecX& atomicNumbers,
                   const VecX& _Phi,
                   const CMatX& _FC,
                   const Vec3& _K);
@@ -27,6 +29,7 @@ class Lattice {
     void MaterializeOccupationsInCell(RefIVecX occupations);
     void SetOccupations(VecX& atomicOccupations, IVecX& atomicOccupationsGroups, MatX& sitesCorrelation);
     T GetCorrelationTemperature(const IVecX& occupations);
+    void GetMagneticMoments(const Vec3& r, RefMatX atomMoms);
   public:
     Mat3 directCell;
     Mat3 recirpcalCell;
@@ -42,6 +45,7 @@ class Lattice {
     VecX Phi;
     CMatX FC;
     Vec3 K;
+    Vec3 KCart;
 };
 
 class LatticeException {

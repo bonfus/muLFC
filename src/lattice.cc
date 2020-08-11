@@ -59,12 +59,18 @@ Lattice::Lattice(const Mat3& unitCell,
                  const MatX& sitesCorrelation,
                  const VecX& _Phi,
                  const CMatX& _FC,
-                 const Vec3& _K) : Phi(_Phi), FC(_FC), K(_K)
+                 const Vec3& _K)
 {
     int label;
 
     directCell = unitCell;
     recips(unitCell, recirpcalCell);
+
+    /* === Magnetic data === */
+    Phi = _Phi;
+    FC  = _FC;
+    K   = _K;
+    Crys2Cart(recirpcalCell, K, KCart);
 
     /* === Atoms data === */
     nAtoms = atomicPositions.cols();
@@ -112,11 +118,17 @@ Lattice::Lattice(const Mat3& unitCell,
                  const MatX& atomicPositions,
                  const VecX& _Phi,
                  const CMatX& _FC,
-                 const Vec3& _K) : Phi(_Phi), FC(_FC), K(_K)
+                 const Vec3& _K)
 {
 
     directCell = unitCell;
     recips(unitCell, recirpcalCell);
+
+    /* === Magnetic data === */
+    Phi = _Phi;
+    FC  = _FC;
+    K   = _K;
+    Crys2Cart(recirpcalCell, K, KCart);
 
     /* === Atoms data === */
     nAtoms = atomicPositions.cols();
@@ -172,6 +184,23 @@ void Lattice::SetOccupations(VecX& atomicOccupations, IVecX& atomicOccupationsGr
     }
 }
 
+void Lattice::GetMagneticMoments(const Vec3& r, RefMatX atomMoms) {
+
+    unsigned int a;     /* counter for atoms */
+    T c, s, KdotR;      /*cosine and sine of K.R */
+    Vec3 R;
+
+    Crys2Cart(directCell, r, R);
+
+    KdotR =  KCart.dot(R); /* R \dot K (done in cartesian coordinates) */
+    for (a = 0; a < nAtoms; ++a)
+    {
+        c = cos (KdotR + 2.0*M_PI*Phi(a) );
+        s = sin (KdotR + 2.0*M_PI*Phi(a) );
+
+        atomMoms.col(a) = c*FC.col(a).real() + s*FC.col(a).imag();
+    }
+}
 
 void Lattice::GetCell(RefMat3 cell) {
     cell = directCell;

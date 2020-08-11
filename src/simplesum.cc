@@ -179,7 +179,7 @@ void  SimpleSum(const T *in_positions,
 
 }
 
-void  SimpleSum2(CLattice * latt, 
+void  SimpleSum2(CLattice * latt,
           const T *in_muonpos, const int * in_supercell,
           const T radius, const unsigned int nnn_for_cont, const T cont_radius,
           const T min_radius_from_atoms,
@@ -200,7 +200,7 @@ void  SimpleSum2(CLattice * latt,
     scx = in_supercell[0];
     scy = in_supercell[1];
     scz = in_supercell[2];
-    
+
     l = reinterpret_cast<Lattice*>(latt);
     /* End of atom filtering */
 

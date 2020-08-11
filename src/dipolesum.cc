@@ -1065,6 +1065,15 @@ Mat3 DipolarTensor( MatX& atomicPositions,
     return DTr;
 }
 
+/**
+    Returns magnetic moments used in dipole sums. Python interface.
+
+    @param atomicPositions, in fractional coordinates.
+    @param FC, Fourier components, in
+    @param phi a vector with the phase associated with each Fourier Component.
+    @param R position of the cell with respect to origin.
+    @param m output magnetic moments
+ */
 py::tuple Moments( MatX& atomicPositions,  CMatX& FC,
                    Vec3& K,  VecX& Phi,
                    const IVec3& sc, const IVec3& rsc, Mat3& unitCell,

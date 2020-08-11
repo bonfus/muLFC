@@ -3,7 +3,7 @@
  * @author Pietro Bonfa
  * @date 18 March 2018
  * @brief Dipolar field calculator
- *     
+ *
  */
 
 #define _USE_MATH_DEFINES
@@ -17,7 +17,7 @@
 
 #ifdef WIN32
 #include <Windows.h>
-#include <stdint.h> // portable: uint64_t   MSVC: __int64 
+#include <stdint.h> // portable: uint64_t   MSVC: __int64
 #else
 #include <sys/time.h>
 #endif
@@ -28,17 +28,17 @@
 
 
 
-UniformRandomInsideUnitCell::UniformRandomInsideUnitCell(const Mat3& lat, int n)
+UniformRandomInsideUnitCell::UniformRandomInsideUnitCell(const Lattice latt)
 {
     srand(time(NULL));
-    
+
     T minx, maxx, miny, maxy, minz, maxz;
     Vec3 boxMin;
     Vec3 boxMax;
     MatX Crys(3,8);
     MatX Cart(3,8);
 
-    lattice = lat;
+    latt.GetCell(lattice);
 
     /* Find box size evaluating all lattice vectors in cartesian
       coordinates */
@@ -53,7 +53,7 @@ UniformRandomInsideUnitCell::UniformRandomInsideUnitCell(const Mat3& lat, int n)
         }
     }
 
-    Crys2Cart(lattice, Crys, Cart, false);
+    Crys2Cart(lattice, Crys, Cart);
 
     boxMin = Cart.rowwise().minCoeff();
     boxMax = Cart.rowwise().maxCoeff();
@@ -64,9 +64,8 @@ UniformRandomInsideUnitCell::UniformRandomInsideUnitCell(const Mat3& lat, int n)
     // Allocate and initialize variables
     _buffer.resize(3, n);
     _buff_size = n;
-    _buff_idx  = 0; // trigger allocation
     AllocateRandomPoints();
-    
+
 }
 
 void UniformRandomInsideUnitCell::GetRandomPos(RefVec3 muonPos)
@@ -81,14 +80,52 @@ void UniformRandomInsideUnitCell::GetRandomPos(RefVec3 muonPos)
         _buff_idx=1;
     }
 }
-void UniformRandomInsideUnitCell::AllocateRandomPoints(){
-    /* A trivial rejection samplig is used to generate a uniform distribution inside the unit cell*/
+
+bool GenerateRandomPoints(const Lattice latt, RefMatX muonPos){
+    /* A trivial rejection samplig is used to generate a uniform
+     * distribution inside the unit cell */
+
+    srand(time(NULL));
+
+    T minx, maxx, miny, maxy, minz, maxz;
+    Vec3 boxMin;
+    Vec3 boxMax;
+    MatX Crys(3,8);
+    MatX Cart(3,8);
+
+    latt.GetCell(lattice);
+
+    /* Find box size evaluating all lattice vectors in cartesian
+      coordinates */
+    boxOrigShift.setZero();
+    int l=0;
+    for (int i=0; i<=1; i++) {
+        for (int j=0; j<=1; j++) {
+            for (int k=0; k<=1; k++) {
+                Crys.col(l) << (T)i,(T)j,(T)k;
+                l++;
+            }
+        }
+    }
+
+    Crys2Cart(lattice, Crys, Cart);
+
+    boxMin = Cart.rowwise().minCoeff();
+    boxMax = Cart.rowwise().maxCoeff();
+
+    _boxSize = (boxMax - boxMin).maxCoeff();
+    boxOrigShift = boxMin;
+
+
+
+    _buff_size = muonPos.cols()
+
     MatX m(3, _buff_size), one(3, _buff_size);
     MatX mFrac(3, _buff_size);
     Vec3 aux;
     int filled = 0;
     int i, iters;
-    
+
     one.setOnes();
 
 #ifndef CXX11RANDOM
@@ -110,7 +147,7 @@ void UniformRandomInsideUnitCell::AllocateRandomPoints(){
 #endif
 
     iters = 0;
-    while(filled < _buff_size) { // Add safe limit to avoid infite loops
+    while(iters < 6) { // Add safe limit to avoid infite loops
 #ifndef CXX11RANDOM
         m = MatX::Random(3, _buff_size);
         m = (m + one)*(_boxSize/2.); // shift from [-1,1] to [0,2], then multiply by box_size/2
@@ -129,11 +166,10 @@ void UniformRandomInsideUnitCell::AllocateRandomPoints(){
             if (aux(0) < 0.0 || aux(0) >= 1.0) continue;
             if (aux(1) < 0.0 || aux(1) >= 1.0) continue;
             if (aux(2) < 0.0 || aux(2) >= 1.0) continue;
-            _buffer.col(filled) = aux;
+            muonPos.col(filled) = aux;
             filled++;
         }
         iters++;
     }
-    _buff_idx=0;
-    if (iters > 5) std::cout << "WARNING: Iterations from uniform random: "<< iters << std::endl;
+    return filled == _buff_size
 }
