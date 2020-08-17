@@ -13,7 +13,8 @@ The μLFC C library has no dependencies. CMake is used as a building tool.
 Any C90 compiler can be used to build the library.
 The details for the Python package follows.
 
-### Prerequisites
+Prerequisites
+-------------
 
 The python extension has the following dependencies:
 
@@ -21,7 +22,8 @@ The python extension has the following dependencies:
 * Numpy 1.10+          (http://www.numpy.org)
 
 
-### Installation
+Installation
+------------
 
 The easiest way to install the Python extension is using pre-baked
 wheels with pip:
@@ -37,7 +39,8 @@ dependencies for Numpy are:
 For Python versions different from the ones listed above muLFC is not
 available as Python Wheels, you'll have to compile and install it from source.
 
-### Compilation
+Compilation
+-----------
 
 You may want to build the extension yourself, especially for optimizing performances.
 

@@ -4,8 +4,7 @@ from os import path
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
-desc = """Local Field Components (or lighting fast calculator) at
-muon sites for the muesr package."""
+desc = """Local Field Components (or lighting fast calculator) at muon sites for the muesr package."""
 with open('README.md','r') as file:
     long_desc = file.read()
 
@@ -88,7 +87,7 @@ setup(name='mulfc',
       version='0.0.3',
       description=desc,
       long_description=long_desc,
-      long_description_content_type='text/markdown',
+      long_description_content_type="text/markdown",
       author='Pietro Bonfa',
       author_email='pietro.bonfa@unipr.it',
       url='https://github.com/bonfus/muLFC',
@@ -101,5 +100,13 @@ setup(name='mulfc',
           'numpy >= 1.8',
      ],
      test_suite="tests",
-     cmdclass={ 'build_ext': build_ext_compiler_check }
+     cmdclass={ 'build_ext': build_ext_compiler_check },
+     include_package_data=True,
+     license='GPLv3',
+     classifiers=[
+         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+         'Topic :: Scientific/Engineering :: Physics',
+         'Programming Language :: Python',
+         'Programming Language :: Python :: 3'
+     ],
      )
