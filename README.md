@@ -17,8 +17,8 @@ The details for the Python package follows.
 
 The python extension has the following dependencies:
 
-* Python 2.7, 3.1+      (http://www.python.org)
-* Numpy 1.8.0+          (http://www.numpy.org)
+* Python 3.1+      (http://www.python.org)
+* Numpy 1.10+          (http://www.numpy.org)
 
 
 ### Installation
@@ -31,7 +31,6 @@ wheels with pip:
 **Important note:** when installing on *Windows* with `pip`, the minimal
 dependencies for Numpy are:
 
-* Python 2.7 ➜ Numpy 1.8+
 * Python 3.5 ➜ Numpy 1.10+
 * Python 3.6 ➜ Numpy 1.12+
 
