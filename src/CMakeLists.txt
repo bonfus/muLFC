@@ -5,8 +5,8 @@ set (devel-headers simplesum.h fastincommsum.h rotatesum.h dipolartensor.h confi
 
 # library version
 set(LFClib_VERSION_MAJOR 0)
-set(LFClib_VERSION_MINOR 1)
-set(LFClib_VERSION_BUGFIX 0)
+set(LFClib_VERSION_MINOR 0)
+set(LFClib_VERSION_BUGFIX 3)
 
 # dynamic library
 add_library (LFClib SHARED ${sources})

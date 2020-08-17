@@ -85,12 +85,12 @@ class build_ext_compiler_check(build_ext):
         build_ext.build_extensions(self)
 
 setup(name='mulfc',
-      version='0.0.2',
+      version='0.0.3',
       description=desc,
       long_description=long_desc,
       long_description_content_type='text/markdown',
       author='Pietro Bonfa',
-      author_email='pietro.bonfa@fis.unipr.it',
+      author_email='pietro.bonfa@unipr.it',
       url='https://github.com/bonfus/muLFC',
       packages=['mulfc',],
       ext_modules=[Extension('lfclib', sources = ['python/lfclib.c',]+src_sources,

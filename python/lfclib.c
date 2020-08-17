@@ -6,6 +6,8 @@
  *     
  */
 
+#define MULFC_VERSION "0.0.3"
+
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include "Python.h"
@@ -647,7 +649,6 @@ static PyMethodDef lfclib_methods[] =
 };
 
 
-#if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef moduledef = {
   PyModuleDef_HEAD_INIT,
   "lfc",            /* m_name */
@@ -659,25 +660,14 @@ static struct PyModuleDef moduledef = {
   NULL,                /* m_clear */
   NULL,                /* m_free */
 };
-#endif
 
 
-PyMODINIT_FUNC
-#if PY_MAJOR_VERSION >= 3
-PyInit_lfclib(void)
-#else
-initlfclib(void)
-#endif
+PyMODINIT_FUNC PyInit_lfclib(void)
 {
-#if PY_MAJOR_VERSION >= 3
   PyObject *module = PyModule_Create(&moduledef);
-#else
-  (void) Py_InitModule("lfclib", lfclib_methods);
-#endif
+  PyModule_AddStringConstant(module, "__version__", MULFC_VERSION);
 
   import_array(); /* Must be present for NumPy */
 
-#if PY_MAJOR_VERSION >= 3
   return module;
-#endif
 }
