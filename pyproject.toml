@@ -1,0 +1,28 @@
+[project]
+name = "mulfc"
+version = "0.0.3"
+description = "Local Field Components (or lighting fast calculator) at muon sites for the muesr package."
+authors = [
+    {name = "Pietro Bonfa", email = "bonfus@gmail.com"},
+    {name = "Pietro Bonfa", email = "pietro.bonfa@unipr.it"},
+]
+dependencies = [
+    "numpy >= 1.8",
+]
+requires-python = ">=3.7"
+readme = "README.md"
+license = {text = "GPLv3"}
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+
+
+[project.urls]
+Homepage = "https://github.com/bonfus/muLFC"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
