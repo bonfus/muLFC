@@ -12,6 +12,7 @@
 
 #include "Python.h"
 #include <numpy/arrayobject.h>
+#include <numpy/npy_math.h>
 #include "dipolartensor.h"
 #include "fastincommsum.h"
 #include "rotatesum.h"
@@ -387,14 +388,14 @@ static PyObject * py_lfclib_fields(PyObject *self, PyObject *args) {
 
   for (i=0; i< num_atoms; i++){
     v = *(npy_cdouble *)PyArray_GETPTR2(FC, i,0);
-    in_fc[6*i+0] = v.real;
-    in_fc[6*i+1] = v.imag;
+    in_fc[6*i+0] = npy_creal(v);
+    in_fc[6*i+1] = npy_cimag(v);
     v = *(npy_cdouble *)PyArray_GETPTR2(FC, i,1);
-    in_fc[6*i+2] = v.real;
-    in_fc[6*i+3] = v.imag;    
+    in_fc[6*i+2] = npy_creal(v);
+    in_fc[6*i+3] = npy_cimag(v);
     v = *(npy_cdouble *)PyArray_GETPTR2(FC, i,2);
-    in_fc[6*i+4] = v.real;
-    in_fc[6*i+5] = v.imag;
+    in_fc[6*i+4] = npy_creal(v);
+    in_fc[6*i+5] = npy_cimag(v);
   }
 
   

@@ -63,12 +63,12 @@ class LocalFields(object):
             raise ValueError("Must have the same shape!")
         
         
-        self._BLor = np.asarray(BLor,np.float)
-        self._BDip = np.asarray(BDip,np.float)
-        self._BCont = np.asarray(BCont,np.float)
+        self._BLor = np.asarray(BLor,np.float64)
+        self._BDip = np.asarray(BDip,np.float64)
+        self._BCont = np.asarray(BCont,np.float64)
         
         try:
-            self._ACont = np.float(ACont)
+            self._ACont = np.float64(ACont)
         except:
             raise TypeError( "Cannot set value for ACont. Must be float." )
         
@@ -154,7 +154,7 @@ class LocalFields(object):
     @ACont.setter
     def ACont(self,value):
         try:
-            self._ACont = np.float(value)
+            self._ACont = np.float64(value)
         except:
             raise TypeError( "Cannot set value for ACont" )
 
@@ -328,7 +328,7 @@ def locfield(lattice_params, atomic_positions, fourier_components, propagation_v
     # Remove non magnetic atoms from list
     magnetic_atoms=[]
     for i, e in enumerate(fourier_components):
-        if not np.allclose(e,np.zeros(3,dtype=np.complex)):
+        if not np.allclose(e,np.zeros(3,dtype=np.complex128)):
             magnetic_atoms.append(i)
 
     p = positions[magnetic_atoms,:]
