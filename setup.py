@@ -34,9 +34,9 @@ openmp_link_args = []
 try:
     from numpy import get_include as numpy_get_include
     numpy_include_dir = [numpy_get_include()]
-except:
+except Exception as e:
     numpy_include_dir = []
-    print("Warning: could not add numpy include dir.")
+    print("Warning: could not add numpy include dir.", e)
 
 # Ugly hack to set compiler flags 
 COMPILE_ARGS = {'msvc':[],'gcc':[],'unix':[]}
