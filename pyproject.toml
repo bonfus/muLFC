@@ -1,6 +1,6 @@
 [project]
 name = "mulfc"
-version = "0.0.3"
+version = "0.0.4"
 description = "Local Field Components (or lighting fast calculator) at muon sites for the muesr package."
 authors = [
     {name = "Pietro Bonfa", email = "bonfus@gmail.com"},

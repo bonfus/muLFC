@@ -84,7 +84,7 @@ class build_ext_compiler_check(build_ext):
         build_ext.build_extensions(self)
 
 setup(name='mulfc',
-      version='0.0.3',
+      version='0.0.4',
       description=desc,
       long_description=long_desc,
       long_description_content_type="text/markdown",

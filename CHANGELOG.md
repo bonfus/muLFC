@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.4
+
+Bugfixes:
+
+  - Fixed compatibility with numpy 2
+
+
+## v0.0.3
+
+  - Dropped Python2 support
+
+
 ## v0.0.2
 
 Bugfixes:
