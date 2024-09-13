@@ -4,6 +4,9 @@ on: [push, pull_request, workflow_dispatch]
 
 env:
   CIBW_BEFORE_BUILD: pip install setuptools numpy
+  CIBW_ARCHS_LINUX: x86_64
+  CIBW_ARCHS_MACOS: x86_64 arm64
+  CIBW_ARCHS_WINDOWS: AMD64
 
 jobs:
   build_wheels:
